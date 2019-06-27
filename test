@@ -1,0 +1,16 @@
+#!/bin/bash
+testwith() {
+    docker run -it --rm \
+        --mount "type=bind,source=$HOME/.m2,destination=/root/.m2,readonly" \
+        --mount "type=bind,source=$(pwd),destination=/root/source,readonly" \
+        -w /root/work \
+        $1  \
+         /bin/bash -c "cp -r /root/source/* /root/work/ && mvn clean test"
+}
+
+set -e
+testwith maven:3-jdk-8 
+testwith maven:3-jdk-11
+testwith maven:3-jdk-12
+testwith maven:3-jdk-13
+
