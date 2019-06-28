@@ -51,4 +51,46 @@ public class ThreadResourcesTest {
         return mine - check;
     }
 
+    @Test
+    public void testSmallClass() throws Exception {
+        testSmallClass(100);
+    }
+
+    private void testSmallClass(int size) {
+        long start = ThreadResources.allocatedBytes(Thread.currentThread());
+
+        SmallClass[] small  = new SmallClass[size];
+        for (SmallClass inner : small) inner = new SmallClass('0', 1, 2, 3);
+
+        long total = ThreadResources.allocatedBytes(Thread.currentThread()) - start;
+
+        final long HEADER_SIZE = 3 * 4;
+        final long CHAR_SIZE = 2;
+        final long INTEGER_SIZE = 4;
+        final long LONG_SIZE = 8;
+        final long DOUBLE_SIZE = 8;
+        long expectedLayout = HEADER_SIZE + CHAR_SIZE + INTEGER_SIZE + LONG_SIZE + DOUBLE_SIZE;
+        final long ARRAY_HEADER_SIZE = 4 * 4;
+        final long REFERENCE_SIZE = 4;
+        long arrayCost = ARRAY_HEADER_SIZE + small.length * REFERENCE_SIZE;
+
+        long expectedTotal = arrayCost + small.length * expectedLayout;
+
+        assertThat(total).isBetween(expectedTotal, expectedTotal + expectedTotal * (expectedTotal*10/100));
+    }
+
+}
+
+class SmallClass {
+    private char c;
+    private int i;
+    private long l;
+    private double d;
+
+    public SmallClass(char c, int i, long l, double d) {
+        this.c = c;
+        this.i = i;
+        this.l = l;
+        this.d = d;
+    }
 }
