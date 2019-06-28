@@ -52,17 +52,26 @@ public class ThreadResourcesTest {
     }
 
     @Test
-    public void testSmallClass() throws Exception {
+    public void testManySmallClass() throws Exception {
         testSmallClass(100);
     }
 
-    private void testSmallClass(int size) {
-        long start = ThreadResources.allocatedBytes(Thread.currentThread());
+    private void testSmallClass(int size) throws InterruptedException {
+        MemorySizedThread thread = new MemorySizedThread() {
+            long start, stop;
+            @Override
+            public void run() {
+                start = ThreadResources.allocatedBytes(Thread.currentThread());
+                SmallClass[] small = new SmallClass[size];
+                for (SmallClass inner : small) inner = new SmallClass('0', 1, 2, 3);
+                stop = ThreadResources.allocatedBytes(Thread.currentThread());
+            }
 
-        SmallClass[] small  = new SmallClass[size];
-        for (SmallClass inner : small) inner = new SmallClass('0', 1, 2, 3);
-
-        long total = ThreadResources.allocatedBytes(Thread.currentThread()) - start;
+            @Override
+            public long memory() {
+                return stop - start;
+            }
+        };
 
         final long HEADER_SIZE = 3 * 4;
         final long CHAR_SIZE = 2;
@@ -72,11 +81,12 @@ public class ThreadResourcesTest {
         long expectedLayout = HEADER_SIZE + CHAR_SIZE + INTEGER_SIZE + LONG_SIZE + DOUBLE_SIZE;
         final long ARRAY_HEADER_SIZE = 4 * 4;
         final long REFERENCE_SIZE = 4;
-        long arrayCost = ARRAY_HEADER_SIZE + small.length * REFERENCE_SIZE;
+        long arrayCost = ARRAY_HEADER_SIZE + size * REFERENCE_SIZE;
+        long expectedTotal = arrayCost + size * expectedLayout;
 
-        long expectedTotal = arrayCost + small.length * expectedLayout;
-
-        assertThat(total).isBetween(expectedTotal, expectedTotal + expectedTotal * (expectedTotal*10/100));
+        thread.start();
+        thread.join();
+        assertThat(thread.memory()).isBetween(expectedTotal, expectedTotal + expectedTotal * (expectedTotal * 10 / 100));
     }
 
 }
@@ -93,4 +103,8 @@ class SmallClass {
         this.l = l;
         this.d = d;
     }
+}
+
+abstract class MemorySizedThread extends Thread {
+    public abstract long memory();
 }
