@@ -63,18 +63,10 @@ public class ThreadResourcesTest {
 
     private void testSmallClass(int size) throws InterruptedException {
         MemorySizedThread thread = new MemorySizedThread() {
-            long start, stop;
             @Override
-            public void run() {
-                start = ThreadResources.allocatedBytes(Thread.currentThread());
+            public void measurableRun() {
                 SmallClass[] small = new SmallClass[size];
                 for (SmallClass inner : small) inner = new SmallClass('0', 1, 2, 3);
-                stop = ThreadResources.allocatedBytes(Thread.currentThread());
-            }
-
-            @Override
-            public long memory() {
-                return stop - start;
             }
         };
 
@@ -94,6 +86,10 @@ public class ThreadResourcesTest {
         assertThat(thread.memory()).isBetween(expectedTotal, expectedTotal + expectedTotal * (expectedTotal * 10 / 100));
     }
 
+    @Test
+    public void testLostSmallClass() throws Exception {
+    }
+
 }
 
 class SmallClass {
@@ -111,5 +107,22 @@ class SmallClass {
 }
 
 abstract class MemorySizedThread extends Thread {
-    public abstract long memory();
+    private long start, stop;
+
+    public abstract void measurableRun();
+
+    @Override
+    public void run() {
+        start = currentMemory();
+        this.measurableRun();
+        stop = currentMemory();
+    }
+
+    private long currentMemory() {
+        return ThreadResources.allocatedBytes(Thread.currentThread());
+    }
+
+    public long memory() {
+        return stop - start;
+    }
 }
