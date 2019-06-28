@@ -52,6 +52,11 @@ public class ThreadResourcesTest {
     }
 
     @Test
+    public void testOneSmallClass() throws Exception {
+        testSmallClass(1);
+    }
+
+    @Test
     public void testManySmallClass() throws Exception {
         testSmallClass(100);
     }
