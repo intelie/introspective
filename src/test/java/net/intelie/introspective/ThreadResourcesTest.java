@@ -11,6 +11,14 @@ import static org.assertj.core.api.Assertions.fail;
 
 public class ThreadResourcesTest {
     private ThreadMXBean bean;
+    final long HEADER_SIZE = 3 * 4;
+    final long CHAR_SIZE = 2;
+    final long INTEGER_SIZE = 4;
+    final long LONG_SIZE = 8;
+    final long DOUBLE_SIZE = 8;
+    final long smallClassLayout = HEADER_SIZE + CHAR_SIZE + INTEGER_SIZE + LONG_SIZE + DOUBLE_SIZE;
+    final long ARRAY_HEADER_SIZE = 4 * 4;
+    final long REFERENCE_SIZE = 4;
 
     @Before
     public void setUp() throws Exception {
@@ -70,24 +78,37 @@ public class ThreadResourcesTest {
             }
         };
 
-        final long HEADER_SIZE = 3 * 4;
-        final long CHAR_SIZE = 2;
-        final long INTEGER_SIZE = 4;
-        final long LONG_SIZE = 8;
-        final long DOUBLE_SIZE = 8;
-        long expectedLayout = HEADER_SIZE + CHAR_SIZE + INTEGER_SIZE + LONG_SIZE + DOUBLE_SIZE;
-        final long ARRAY_HEADER_SIZE = 4 * 4;
-        final long REFERENCE_SIZE = 4;
         long arrayCost = ARRAY_HEADER_SIZE + size * REFERENCE_SIZE;
-        long expectedTotal = arrayCost + size * expectedLayout;
+        long expectedTotal = arrayCost + size * smallClassLayout;
 
         thread.start();
         thread.join();
-        assertThat(thread.memory()).isBetween(expectedTotal, expectedTotal + expectedTotal * (expectedTotal * 10 / 100));
+        assertThat(thread.memory()).isBetween(expectedTotal, (expectedTotal * 120 / 100));
     }
 
     @Test
-    public void testLostSmallClass() throws Exception {
+    public void testLostOneSmallClass() throws Exception {
+        testLostSmallClass(1);
+    }
+
+    @Test
+    public void testLostManySmallClass() throws Exception {
+        testLostSmallClass(100);
+    }
+
+    public void testLostSmallClass(long size) throws Exception {
+        MemorySizedThread thread = new MemorySizedThread() {
+            @Override
+            public void measurableRun() {
+                SmallClass small;
+                for (int i = 0; i < size; i++)
+                    small = new SmallClass('0', 1, 2, 3);
+            }
+        };
+
+        thread.start();
+        thread.join();
+        assertThat(thread.memory()).isBetween(smallClassLayout, (smallClassLayout * 120 / 100));
     }
 
 }
