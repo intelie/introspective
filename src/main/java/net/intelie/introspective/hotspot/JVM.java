@@ -3,6 +3,8 @@ package net.intelie.introspective.hotspot;
 import sun.misc.Unsafe;
 
 import java.io.PrintStream;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -10,6 +12,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class JVM {
     public static final Unsafe unsafe = getUnsafe();
@@ -18,6 +22,9 @@ public class JVM {
     private final Map<String, Number> constants = new LinkedHashMap<>();
 
     public JVM() {
+        if (unsafe == null)
+            throw new JVMException("Unable to get Unsafe");
+
         readVmTypes(readVmStructs());
         readVmIntConstants();
         readVmLongConstants();
@@ -213,11 +220,21 @@ public class JVM {
 
     private static Unsafe getUnsafe() {
         try {
-            java.lang.reflect.Field f = Unsafe.class.getDeclaredField("theUnsafe");
-            f.setAccessible(true);
-            return (Unsafe) f.get(null);
-        } catch (Exception e) {
-            throw new JVMException("Unable to get Unsafe", e);
+            return AccessController.doPrivileged((PrivilegedAction<Unsafe>) () -> {
+                        try {
+                            java.lang.reflect.Field unsafe = Unsafe.class.getDeclaredField("theUnsafe");
+                            unsafe.setAccessible(true);
+                            return (Unsafe) unsafe.get(null);
+                        } catch (Throwable e) {
+                            throw new IllegalStateException(e);
+                        }
+                    }
+            );
+        } catch (Throwable e) {
+            Logger.getLogger(JVM.class.getName())
+                    .log(Level.WARNING, "Unable to get UNSAFE", e);
+            return null;
         }
+
     }
 }
