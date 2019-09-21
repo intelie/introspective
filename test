@@ -10,6 +10,8 @@ testwith() {
 
 set -e
 testwith maven:3-jdk-8 
+testwith maven:3-jdk-9
+testwith maven:3-jdk-10
 testwith maven:3-jdk-11
 testwith maven:3-jdk-12
 testwith maven:3-jdk-13

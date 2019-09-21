@@ -11,14 +11,6 @@ import static org.assertj.core.api.Assertions.fail;
 
 public class ThreadResourcesTest {
     private ThreadMXBean bean;
-    final long HEADER_SIZE = 3 * 4;
-    final long CHAR_SIZE = 2;
-    final long INTEGER_SIZE = 4;
-    final long LONG_SIZE = 8;
-    final long DOUBLE_SIZE = 8;
-    final long smallClassLayout = HEADER_SIZE + CHAR_SIZE + INTEGER_SIZE + LONG_SIZE + DOUBLE_SIZE;
-    final long ARRAY_HEADER_SIZE = 4 * 4;
-    final long REFERENCE_SIZE = 4;
 
     @Before
     public void setUp() throws Exception {
@@ -43,11 +35,11 @@ public class ThreadResourcesTest {
 
     @Test
     public void testWillGetByteArrayAllocation() {
-        long start = ThreadResources.allocatedBytes(Thread.currentThread());
+        long start = ThreadResources.allocatedBytes();
 
         byte[] bytes = new byte[100000];
 
-        long total = ThreadResources.allocatedBytes(Thread.currentThread()) - start;
+        long total = ThreadResources.allocatedBytes() - start;
 
         assertThat(total).isBetween(100000L, 100000L + 100);
     }
@@ -59,91 +51,4 @@ public class ThreadResourcesTest {
         return mine - check;
     }
 
-    @Test
-    public void testOneSmallClass() throws Exception {
-        testSmallClass(1);
-    }
-
-    @Test
-    public void testManySmallClass() throws Exception {
-        testSmallClass(100);
-    }
-
-    private void testSmallClass(int size) throws InterruptedException {
-        MemorySizedThread thread = new MemorySizedThread() {
-            @Override
-            public void measurableRun() {
-                SmallClass[] small = new SmallClass[size];
-                for (SmallClass inner : small) inner = new SmallClass('0', 1, 2, 3);
-            }
-        };
-
-        long arrayCost = ARRAY_HEADER_SIZE + size * REFERENCE_SIZE;
-        long expectedTotal = arrayCost + size * smallClassLayout;
-
-        thread.start();
-        thread.join();
-        assertThat(thread.memory()).isBetween(expectedTotal, (expectedTotal * 120 / 100));
-    }
-
-    @Test
-    public void testLostOneSmallClass() throws Exception {
-        testLostSmallClass(1);
-    }
-
-    @Test
-    public void testLostManySmallClass() throws Exception {
-        testLostSmallClass(100);
-    }
-
-    public void testLostSmallClass(long size) throws Exception {
-        MemorySizedThread thread = new MemorySizedThread() {
-            @Override
-            public void measurableRun() {
-                SmallClass small;
-                for (int i = 0; i < size; i++)
-                    small = new SmallClass('0', 1, 2, 3);
-            }
-        };
-
-        thread.start();
-        thread.join();
-        assertThat(thread.memory()).isBetween(smallClassLayout, (smallClassLayout * 120 / 100));
-    }
-
-}
-
-class SmallClass {
-    private char c;
-    private int i;
-    private long l;
-    private double d;
-
-    public SmallClass(char c, int i, long l, double d) {
-        this.c = c;
-        this.i = i;
-        this.l = l;
-        this.d = d;
-    }
-}
-
-abstract class MemorySizedThread extends Thread {
-    private long start, stop;
-
-    public abstract void measurableRun();
-
-    @Override
-    public void run() {
-        start = currentMemory();
-        this.measurableRun();
-        stop = currentMemory();
-    }
-
-    private long currentMemory() {
-        return ThreadResources.allocatedBytes(Thread.currentThread());
-    }
-
-    public long memory() {
-        return stop - start;
-    }
 }

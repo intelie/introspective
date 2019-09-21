@@ -63,6 +63,11 @@ public abstract class ThreadResources {
         return validTlab;
     }
 
+
+    public static long allocatedBytes() {
+        return allocatedBytes(Thread.currentThread());
+    }
+
     public static long allocatedBytes(Thread thread) {
         if (!validAllocated) return 0;
         long offset = VMThread.of(thread);
