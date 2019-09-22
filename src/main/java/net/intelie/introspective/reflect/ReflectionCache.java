@@ -37,8 +37,7 @@ public class ReflectionCache {
 
             long size = JVMPrimitives.getObjectHeaderSize();
             while (clazz != null) {
-                Field[] fields = clazz.getDeclaredFields();
-                for (Field field : fields) {
+                for (Field field : clazz.getDeclaredFields()) {
                     if (Modifier.isStatic(field.getModifiers()))
                         continue;
 
