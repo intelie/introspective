@@ -1,97 +1,76 @@
 package net.intelie.introspective.reflect;
 
-import me.qmx.jitescript.JiteClass;
 import net.intelie.introspective.hotspot.JVM;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.util.function.Function;
-
-import static me.qmx.jitescript.CodeBlock.newCodeBlock;
-import static me.qmx.jitescript.util.CodegenUtils.*;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FastFieldAccessor {
-    private final Function<Object, Object>[] accessors;
+    private final Supplier<Accessor>[] accessors;
     private final String name;
-    private int currentAccessorIndex;
-    private Function<Object, Object> currentAccessor;
+    private int nextAccessor;
+    private Accessor currentAccessor;
 
     public FastFieldAccessor(Field field) {
         this.name = field.getName();
-        this.accessors = new Function[]{
-                reflectionAccessor(field),
-                bytecodeAccessor(field),
-                unsafeAccessor(field),
-                x -> null
+        this.accessors = new Supplier[]{
+                () -> unsafeAccessor(field),
+                () -> reflectionAccessor(field),
+                () -> (Accessor) (obj -> null)
         };
 
-        currentAccessor = accessors[currentAccessorIndex = 0];
+        nextAccessor = 0;
+        moveToNextAccessor();
     }
 
-
-    private static Function<Object, Object> reflectionAccessor(Field field) {
+    private void moveToNextAccessor() {
         try {
-            field.setAccessible(true);
-            return x -> {
-                try {
-                    return field.get(x);
-                } catch (IllegalAccessException e) {
-                    throw new IllegalStateException(e);
-                }
-            };
+            currentAccessor = accessors[nextAccessor++].get();
         } catch (Throwable e) {
-            e.printStackTrace();
-            return null;
+            Logger.getLogger(FastFieldAccessor.class.getName())
+                    .log(Level.INFO, "Error getting accessor for field '" + name + "'", e);
         }
     }
 
-    private static Function<Object, Object> unsafeAccessor(Field field) {
-        try {
-            long offset = JVMPrimitives.getFieldOffset(field);
-            return x -> JVMPrimitives.getFieldObject(x, offset);
-        } catch (Throwable e) {
-            e.printStackTrace();
-            return null;
-        }
+
+    private static Accessor unsafeAccessor(Field field) {
+        long offset = JVMPrimitives.getFieldOffset(field);
+        return x -> JVMPrimitives.getFieldObject(x, offset);
     }
 
-    private static Function<Object, Object> bytecodeAccessor(Field field) {
-        try {
-            JiteClass jite = new JiteClass(p(field.getDeclaringClass()) + "$field$" + field.getName(), new String[]{p(Function.class)}) {{
-                defineMethod("<init>", ACC_PUBLIC, sig(void.class),
-                        newCodeBlock()
-                                .aload(0)
-                                .invokespecial(p(Object.class), "<init>", sig(void.class))
-                                .voidreturn()
-                );
+    private static Accessor reflectionAccessor(Field field) {
+        field.setAccessible(true);
+        return x -> {
+            try {
+                return field.get(x);
+            } catch (IllegalAccessException e) {
+                throw new IllegalStateException(e);
+            }
+        };
 
-                defineMethod("apply", ACC_PUBLIC | ACC_FINAL, sig(Object.class, Object.class),
-                        newCodeBlock()
-                                .aload(1)
-                                .checkcast(p(field.getDeclaringClass()))
-                                .getfield(p(field.getDeclaringClass()), field.getName(), ci(field.getType()))
-                                .areturn()
-                );
-            }};
-            Class<?> clazz = JVMPrimitives.unsafe().defineAnonymousClass(field.getDeclaringClass(), jite.toBytes(), new Object[0]);
-            return (Function<Object, Object>) clazz.getDeclaredConstructor().newInstance();
-        } catch (Throwable e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     public Object get(Object target) {
         do {
             try {
-                return currentAccessor.apply(target);
+                return currentAccessor.get(target);
             } catch (Throwable e) {
-                e.printStackTrace();
-                currentAccessor = accessors[++currentAccessorIndex];
+                Logger.getLogger(FastFieldAccessor.class.getName())
+                        .log(Level.INFO, "Error using accessor for field '" + name + "'", e);
+                moveToNextAccessor();
             }
         } while (true);
     }
 
     public String name() {
         return name;
+    }
+
+    private static interface Accessor {
+        Object get(Object obj) throws Exception;
     }
 }

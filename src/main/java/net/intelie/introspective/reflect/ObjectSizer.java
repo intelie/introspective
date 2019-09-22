@@ -1,17 +1,15 @@
 package net.intelie.introspective.reflect;
 
-import java.util.ArrayList;
 import java.util.IdentityHashMap;
-import java.util.List;
 
 public class ObjectSizer {
     private final ReflectionCache cache;
     private final StringBuilder builder = new StringBuilder();
-    private final List<Slot> Q;
+    private final ReferencePeeler[] Q;
     private final IdentityHashMap<Object, Object> seen = new IdentityHashMap<>();
     private int index = 0;
     private Object current;
-    private Slot currentSlot;
+    private ReferencePeeler currentPeeler;
     private long bytes;
     private Class<?> type;
 
@@ -21,8 +19,11 @@ public class ObjectSizer {
 
     public ObjectSizer(ReflectionCache cache) {
         this.cache = cache;
-        this.Q = new ArrayList<>();
-        this.Q.add(new Slot(new ConstantDummyPeeler()));
+        this.Q = new ReferencePeeler[10000];
+        Q[0] = new ConstantDummyPeeler();
+        for (int i = 1; i < 1000; i++) {
+            Q[i] = new GenericPeeler(cache);
+        }
     }
 
     public void clear() {
@@ -31,17 +32,17 @@ public class ObjectSizer {
         bytes = 0;
         seen.clear();
         index = 0;
-        currentSlot = Q.get(0);
+        currentPeeler = Q[0];
     }
 
     public void resetTo(Object obj) {
         clear();
-        currentSlot.reset(null, obj);
+        currentPeeler.resetTo(null, obj);
     }
 
     public boolean moveNext() {
         while (index >= 0) {
-            if (currentSlot.moveNext() && seen.put(current = currentSlot.peeler.current(), true) == null) {
+            if (currentPeeler.moveNext() && seen.put(current = currentPeeler.current(), true) == null) {
                 type = current.getClass();
 
                 //the value is a boxed primitive
@@ -50,19 +51,11 @@ public class ObjectSizer {
                     bytes = fast;
                     return true;
                 }
-
-                index++;
-                if (index >= Q.size())
-                    Q.add(currentSlot = new Slot(new GenericPeeler(cache)));
-                else
-                    currentSlot = Q.get(index);
-
-                bytes = currentSlot.reset(type, this.current);
+                currentPeeler = Q[++index];
+                bytes = currentPeeler.resetTo(type, this.current);
                 return true;
             } else {
-                currentSlot.clear();
-                --index;
-                currentSlot = index >= 0 ? Q.get(index) : null;
+                currentPeeler = --index >= 0 ? Q[index] : null;
             }
         }
         return false;
@@ -87,36 +80,11 @@ public class ObjectSizer {
     public String path() {
         builder.setLength(0);
         for (int i = 1; i <= index; i++) {
-            Slot slot = Q.get(i);
-            if (slot.init) {
-                builder.append('.');
-                builder.append(slot.peeler.currentIndex());
-            }
+            ReferencePeeler peeler = Q[i];
+            builder.append('.');
+            builder.append(peeler.currentIndex());
         }
         return builder.toString();
-    }
-
-    private static class Slot {
-        private final ReferencePeeler peeler;
-        private boolean init;
-
-        private Slot(ReferencePeeler peeler) {
-            this.peeler = peeler;
-        }
-
-        public void clear() {
-            this.init = false;
-            this.peeler.clear();
-        }
-
-        public long reset(Class<?> type, Object value) {
-            this.init = false;
-            return this.peeler.resetTo(type, value);
-        }
-
-        public boolean moveNext() {
-            return init = this.peeler.moveNext();
-        }
     }
 
 }

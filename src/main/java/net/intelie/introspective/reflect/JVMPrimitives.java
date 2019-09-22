@@ -3,6 +3,7 @@ package net.intelie.introspective.reflect;
 import net.intelie.introspective.hotspot.JVM;
 import sun.misc.Unsafe;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -86,10 +87,6 @@ public class JVMPrimitives {
 
     public static long align(long v) {
         return v + ((8 - (v & 7)) & 7);
-    }
-
-    public static Unsafe unsafe() {
-        return experiments.U;
     }
 
     private static class Experiments {

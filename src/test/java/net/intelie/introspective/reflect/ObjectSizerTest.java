@@ -54,7 +54,7 @@ public class ObjectSizerTest {
         long start = System.nanoTime();
         long memStart = ThreadResources.allocatedBytes(Thread.currentThread());
         long total = 0;
-        for (int i = 0; i < 100000000; i++) {
+        for (int i = 0; i < 10000000; i++) {
             sizer.resetTo(test);
             while (sizer.moveNext()) total++;
         }

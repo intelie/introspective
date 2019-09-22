@@ -32,7 +32,8 @@ public class ObjectPeeler implements ReferencePeeler {
 
     @Override
     public boolean moveNext() {
-        while (it < cached.fieldCount()) {
+        int fieldCount = cached.fieldCount();
+        while (it < fieldCount) {
             current = cached.value(obj, it++);
             if (current != null)
                 return true;
