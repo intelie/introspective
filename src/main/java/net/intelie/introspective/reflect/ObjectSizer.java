@@ -48,12 +48,13 @@ public class ObjectSizer {
     public boolean moveNext() {
         while (index >= 0) {
             if (currentPeeler.moveNext()) {
-                if (seen.put(current = currentPeeler.current(), true) != null)
+                current = currentPeeler.current();
+                if (seen.put(current, true) != null)
                     continue;
                 type = current.getClass();
 
                 //the value is a boxed primitive
-                Long fast = JVMPrimitives.getFastPath(type, current);
+                Long fast = JVMPrimitives.getFastPath(type);
                 if (fast != null) {
                     bytes = fast;
                     return true;
