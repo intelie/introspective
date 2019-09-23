@@ -24,7 +24,7 @@ public class ObjectPeelerTest {
         LightVM.current();
         assertThat(JVMPrimitives.align(bytes)).isEqualTo(LightVM.current().sizeOf(obj));
         //remember this is also a reference
-        assertThat(bytes).isEqualTo(12 + 30 + 10 * JVMPrimitives.getOppSize());
+        assertThat(bytes).isEqualTo(12 + 32 + 10 * JVMPrimitives.getOppSize());
 
         assertNext(peeler, "boxedByte", (byte) 1);
         assertNext(peeler, "boxedShort", (short) 2);
@@ -88,7 +88,7 @@ public class ObjectPeelerTest {
 
         LightVM.current();
         assertThat(JVMPrimitives.align(bytes)).isEqualTo(LightVM.current().sizeOf(obj));
-        assertThat(bytes).isEqualTo(12 + 30 + 9 * JVMPrimitives.getOppSize());
+        assertThat(bytes).isEqualTo(12 + 32 + 9 * JVMPrimitives.getOppSize());
 
         assertNext(peeler, "boxedByte", (byte) 1);
         assertNext(peeler, "boxedShort", (short) 2);

@@ -8,7 +8,7 @@ public class VMThread {
             eetop = Thread.class.getDeclaredField("eetop");
             eetop.setAccessible(true);
         } catch (NoSuchFieldException e) {
-            throw new JVMException("Thread.eetop field not found");
+            throw new IllegalArgumentException("Thread.eetop field not found");
         }
     }
 
@@ -16,11 +16,7 @@ public class VMThread {
         try {
             return eetop.getLong(javaThread);
         } catch (IllegalAccessException e) {
-            throw new JVMException(e);
+            throw new IllegalArgumentException(e);
         }
-    }
-
-    public static long current() {
-        return of(Thread.currentThread());
     }
 }

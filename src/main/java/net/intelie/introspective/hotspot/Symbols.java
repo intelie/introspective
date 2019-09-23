@@ -15,7 +15,7 @@ public class Symbols {
             try {
                 System.load(System.getProperty("java.home") + dll);
             } catch (UnsatisfiedLinkError e) {
-                throw new JVMException("Cannot find jvm.dll. Unsupported JVM?");
+                throw new IllegalStateException("Cannot find jvm.dll. Unsupported JVM?");
             }
             classLoader = Symbols.class.getClassLoader();
         } else {
@@ -26,7 +26,7 @@ public class Symbols {
             findNative = ClassLoader.class.getDeclaredMethod("findNative", ClassLoader.class, String.class);
             findNative.setAccessible(true);
         } catch (NoSuchMethodException e) {
-            throw new JVMException("Method ClassLoader.findNative not found");
+            throw new IllegalStateException("Method ClassLoader.findNative not found");
         }
     }
 
@@ -34,9 +34,9 @@ public class Symbols {
         try {
             return (Long) findNative.invoke(null, classLoader, name);
         } catch (InvocationTargetException e) {
-            throw new JVMException(e.getTargetException());
+            throw new IllegalArgumentException(e.getTargetException());
         } catch (IllegalAccessException e) {
-            throw new JVMException(e);
+            throw new IllegalArgumentException(e);
         }
     }
 }

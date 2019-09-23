@@ -29,29 +29,19 @@ public abstract class ThreadResources {
     }
 
     private static Field initField(Type type, String name) {
-        try {
-            return type != null ? type.field(name) : null;
-        } catch (Throwable e) {
-            return null;
-        }
+        return type.field(name);
     }
 
     private static Type initType(String name) {
-        try {
-            return vm != null ? vm.type(name) : null;
-        } catch (Throwable e) {
-            return null;
-        }
+        return vm.type(name);
     }
 
     private static JVM initJVM() {
-        JVM jvm;
         try {
-            jvm = new JVM();
+            return new JVM();
         } catch (Throwable e) {
-            jvm = null;
+            return null;
         }
-        return jvm;
     }
 
 

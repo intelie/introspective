@@ -43,7 +43,7 @@ public class ArrayPeeler implements ReferencePeeler {
 
     @Override
     public Object currentIndex() {
-        return it - 1;
+        return it > 0 ? it - 1 : null;
     }
 }
 

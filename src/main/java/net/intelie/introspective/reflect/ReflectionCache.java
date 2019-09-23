@@ -41,7 +41,7 @@ public class ReflectionCache {
                     if (Modifier.isStatic(field.getModifiers()))
                         continue;
 
-                    size += JVMPrimitives.getPrimitive(field.getType());
+                    size = Math.max(size, JVMPrimitives.getFieldOffset(field) + JVMPrimitives.getPrimitive(field.getType()));
                     if (field.getType().isPrimitive() || !shouldFollow.test(field))
                         continue;
                     peelable.add(new FastFieldAccessor(field));

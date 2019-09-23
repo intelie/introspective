@@ -1,6 +1,6 @@
 package net.intelie.introspective.reflect;
 
-import net.intelie.introspective.hotspot.JVM;
+import net.intelie.introspective.util.UnsafeGetter;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Array;
@@ -18,6 +18,8 @@ public class JVMPrimitives {
     private static final long oopSize;
     private static final long objectArrayBaseOffset;
     private static final Experiments experiments = Experiments.get();
+    private static final Unsafe U = UnsafeGetter.get();
+
 
     static {
         oopSize = experiments.computeOopSize();
@@ -54,23 +56,23 @@ public class JVMPrimitives {
         arrayBaseOffset.put(arrayClass, (long) jvm.computeArrayBaseOffset(arrayClass));
     }
 
+    public static long getFieldOffset(Field field) {
+        return U.objectFieldOffset(field);
+    }
+
     public static long getPrimitive(Class<?> clazz) {
         Long answer = primitive.get(clazz);
         if (answer == null) return oopSize;
         return answer;
     }
 
+    public static long getArrayShallowCost(Class<?> clazz, Class<?> componentType, Object value) {
+        return JVMPrimitives.getArrayBaseOffset(clazz) +
+                JVMPrimitives.getPrimitive(componentType) * Array.getLength(value);
+    }
+
     public static long getArrayBaseOffset(Class<?> clazz) {
         return arrayBaseOffset.getOrDefault(clazz, objectArrayBaseOffset);
-    }
-
-    public static long getFieldOffset(Field field) {
-        if (experiments.U == null) return -1;
-        return experiments.U.objectFieldOffset(field);
-    }
-
-    public static Object getFieldObject(Object target, long offset) {
-        return experiments.U.getObject(target, offset);
     }
 
     public static long getObjectHeaderSize() {
@@ -91,16 +93,10 @@ public class JVMPrimitives {
 
     private static class Experiments {
         private static final Experiments INSTANCE = new Experiments();
-        private final Unsafe U;
-
-        private Experiments() {
-            U = JVM.unsafe;
-        }
 
         public static Experiments get() {
             return INSTANCE;
         }
-
 
         public int computeBooleanSize() {
             return getMinDiff(MyBooleans4.class, 1);

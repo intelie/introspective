@@ -4,10 +4,7 @@ import net.intelie.introspective.ThreadResources;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,6 +19,15 @@ public class ObjectSizerTest {
     @Test
     public void estimateMap() {
         Map test = new HashMap<>();
+        test.put(111, Arrays.asList("aaa", 222));
+        test.put(333.0, Collections.singletonMap("bbb", 444));
+
+        assertThat(estimate(test)).isEqualTo(TestSizeUtils.size(test));
+    }
+
+    @Test
+    public void estimateLinkedHashMap() {
+        Map test = new LinkedHashMap();
         test.put(111, Arrays.asList("aaa", 222));
         test.put(333.0, Collections.singletonMap("bbb", 444));
 

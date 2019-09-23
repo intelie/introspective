@@ -48,7 +48,7 @@ public class ObjectPeeler implements ReferencePeeler {
 
     @Override
     public Object currentIndex() {
-        return cached.fieldName(it - 1);
+        return it > 0 ? cached.fieldName(it - 1) : null;
     }
 }
 

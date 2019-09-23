@@ -1,7 +1,6 @@
 package net.intelie.introspective.reflect;
 
 public class ConstantDummyPeeler implements ReferencePeeler {
-    public static final String EMPTY = "";
     private Object obj;
     private boolean eof;
 
@@ -31,6 +30,6 @@ public class ConstantDummyPeeler implements ReferencePeeler {
 
     @Override
     public Object currentIndex() {
-        return EMPTY;
+        return null;
     }
 }

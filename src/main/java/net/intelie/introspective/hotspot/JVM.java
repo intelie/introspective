@@ -1,30 +1,24 @@
 package net.intelie.introspective.hotspot;
 
+import net.intelie.introspective.util.Preconditions;
+import net.intelie.introspective.util.UnsafeGetter;
 import sun.misc.Unsafe;
 
 import java.io.PrintStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class JVM {
-    public static final Unsafe unsafe = getUnsafe();
+    public static final Unsafe unsafe = UnsafeGetter.get();
 
     private final Map<String, Type> types = new LinkedHashMap<>();
     private final Map<String, Number> constants = new LinkedHashMap<>();
 
     public JVM() {
-        if (unsafe == null)
-            throw new JVMException("Unable to get Unsafe");
-
         readVmTypes(readVmStructs());
         readVmIntConstants();
         readVmLongConstants();
@@ -118,46 +112,20 @@ public class JVM {
         return unsafe.getByte(addr);
     }
 
-    public void putByte(long addr, byte val) {
-        unsafe.putByte(addr, val);
-    }
-
-    public short getShort(long addr) {
-        return unsafe.getShort(addr);
-    }
-
-    public void putShort(long addr, short val) {
-        unsafe.putShort(addr, val);
-    }
-
     public int getInt(long addr) {
         return unsafe.getInt(addr);
-    }
-
-    public void putInt(long addr, int val) {
-        unsafe.putInt(addr, val);
     }
 
     public long getLong(long addr) {
         return unsafe.getLong(addr);
     }
 
-    public void putLong(long addr, long val) {
-        unsafe.putLong(addr, val);
-    }
-
     public long getAddress(long addr) {
         return unsafe.getAddress(addr);
     }
 
-    public void putAddress(long addr, long val) {
-        unsafe.putAddress(addr, val);
-    }
-
     public String getString(long addr) {
-        if (addr == 0) {
-            return null;
-        }
+        if (addr == 0) return null;
 
         char[] chars = new char[40];
         int offset = 0;
@@ -174,34 +142,17 @@ public class JVM {
 
     public long getSymbol(String name) {
         long address = Symbols.lookup(name);
-        if (address == 0) {
-            throw new NoSuchElementException("No such symbol: " + name);
-        }
+        Preconditions.checkArgument(address != 0,
+                "No such symbol: %s", name);
         return getLong(address);
     }
 
     public Type type(String name) {
-        Type type = types.get(name);
-        if (type == null) {
-            throw new NoSuchElementException("No such type: " + name);
-        }
-        return type;
+        return types.get(name);
     }
 
     public Number constant(String name) {
-        Number constant = constants.get(name);
-        if (constant == null) {
-            throw new NoSuchElementException("No such constant: " + name);
-        }
-        return constant;
-    }
-
-    public int intConstant(String name) {
-        return constant(name).intValue();
-    }
-
-    public long longConstant(String name) {
-        return constant(name).longValue();
+        return constants.get(name);
     }
 
     public void dump(PrintStream out) {
@@ -216,25 +167,5 @@ public class JVM {
         for (Type type : types.values()) {
             out.println(type);
         }
-    }
-
-    private static Unsafe getUnsafe() {
-        try {
-            return AccessController.doPrivileged((PrivilegedAction<Unsafe>) () -> {
-                        try {
-                            java.lang.reflect.Field unsafe = Unsafe.class.getDeclaredField("theUnsafe");
-                            unsafe.setAccessible(true);
-                            return (Unsafe) unsafe.get(null);
-                        } catch (Throwable e) {
-                            throw new IllegalStateException(e);
-                        }
-                    }
-            );
-        } catch (Throwable e) {
-            Logger.getLogger(JVM.class.getName())
-                    .log(Level.WARNING, "Unable to get UNSAFE", e);
-            return null;
-        }
-
     }
 }

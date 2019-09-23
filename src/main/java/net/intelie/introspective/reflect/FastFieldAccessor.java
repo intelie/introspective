@@ -1,57 +1,75 @@
 package net.intelie.introspective.reflect;
 
-import net.intelie.introspective.hotspot.JVM;
+import net.intelie.introspective.util.UnsafeGetter;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
-import java.util.function.Function;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class FastFieldAccessor {
-    private final Supplier<Accessor>[] accessors;
+    private static final Unsafe U = UnsafeGetter.get();
+    private final Deque<Supplier<Accessor>> accessors;
     private final String name;
-    private int nextAccessor;
     private Accessor currentAccessor;
 
     public FastFieldAccessor(Field field) {
-        this.name = field.getName();
-        this.accessors = new Supplier[]{
-                () -> unsafeAccessor(field),
-                () -> reflectionAccessor(field),
-                () -> (Accessor) (obj -> null)
-        };
+        this(field, true);
+    }
 
-        nextAccessor = 0;
+    public FastFieldAccessor(Field field, boolean allowUnsafe) {
+        this.name = field.getName();
+        this.accessors = new ArrayDeque<>();
+
+        if (allowUnsafe && U != null)
+            this.accessors.addLast(() -> unsafeAccessor(field));
+        this.accessors.addLast(() -> reflectionAccessor(field));
+        this.accessors.addLast(() -> obj -> null);
+
         moveToNextAccessor();
     }
 
-    private void moveToNextAccessor() {
-        try {
-            currentAccessor = accessors[nextAccessor++].get();
-        } catch (Throwable e) {
-            Logger.getLogger(FastFieldAccessor.class.getName())
-                    .log(Level.INFO, "Error getting accessor for field '" + name + "'", e);
-        }
-    }
-
-
     private static Accessor unsafeAccessor(Field field) {
-        long offset = JVMPrimitives.getFieldOffset(field);
-        return x -> JVMPrimitives.getFieldObject(x, offset);
+        long offset = U.objectFieldOffset(field);
+        Class<?> type = field.getType();
+        if (byte.class.equals(type))
+            return x -> U.getByte(x, offset);
+        if (short.class.equals(type))
+            return x -> U.getShort(x, offset);
+        if (int.class.equals(type))
+            return x -> U.getInt(x, offset);
+        if (long.class.equals(type))
+            return x -> U.getLong(x, offset);
+        if (float.class.equals(type))
+            return x -> U.getFloat(x, offset);
+        if (double.class.equals(type))
+            return x -> U.getDouble(x, offset);
+        if (boolean.class.equals(type))
+            return x -> U.getBoolean(x, offset);
+        if (char.class.equals(type))
+            return x -> U.getChar(x, offset);
+        return x -> U.getObject(x, offset);
     }
 
     private static Accessor reflectionAccessor(Field field) {
         field.setAccessible(true);
-        return x -> {
-            try {
-                return field.get(x);
-            } catch (IllegalAccessException e) {
-                throw new IllegalStateException(e);
-            }
-        };
+        return x -> field.get(x);
+    }
 
+    private void moveToNextAccessor() {
+        while (!accessors.isEmpty()) {
+            try {
+                currentAccessor = Objects.requireNonNull(accessors.pollFirst()).get();
+                return;
+            } catch (Throwable e) {
+                Logger.getLogger(FastFieldAccessor.class.getName())
+                        .log(Level.INFO, "Error getting accessor for field '" + name + "'", e);
+            }
+        }
     }
 
     public Object get(Object target) {
@@ -70,7 +88,7 @@ public class FastFieldAccessor {
         return name;
     }
 
-    private static interface Accessor {
+    private interface Accessor {
         Object get(Object obj) throws Exception;
     }
 }

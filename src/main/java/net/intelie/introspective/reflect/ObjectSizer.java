@@ -1,12 +1,13 @@
 package net.intelie.introspective.reflect;
 
+import java.util.Arrays;
 import java.util.IdentityHashMap;
 
 public class ObjectSizer {
-    private final ReflectionCache cache;
     private final StringBuilder builder = new StringBuilder();
-    private final ReferencePeeler[] Q;
     private final IdentityHashMap<Object, Object> seen = new IdentityHashMap<>();
+    private final ReflectionCache cache;
+    private ReferencePeeler[] Q;
     private int index = 0;
     private Object current;
     private ReferencePeeler currentPeeler;
@@ -19,9 +20,9 @@ public class ObjectSizer {
 
     public ObjectSizer(ReflectionCache cache) {
         this.cache = cache;
-        this.Q = new ReferencePeeler[10000];
+        this.Q = new ReferencePeeler[16];
         Q[0] = new ConstantDummyPeeler();
-        for (int i = 1; i < 1000; i++) {
+        for (int i = 1; i < Q.length; i++) {
             Q[i] = new GenericPeeler(cache);
         }
     }
@@ -31,8 +32,12 @@ public class ObjectSizer {
         type = null;
         bytes = 0;
         seen.clear();
+
+        while (index > 0)
+            Q[index--].clear();
         index = 0;
         currentPeeler = Q[0];
+        currentPeeler.clear();
     }
 
     public void resetTo(Object obj) {
@@ -42,7 +47,9 @@ public class ObjectSizer {
 
     public boolean moveNext() {
         while (index >= 0) {
-            if (currentPeeler.moveNext() && seen.put(current = currentPeeler.current(), true) == null) {
+            if (currentPeeler.moveNext()) {
+                if (seen.put(current = currentPeeler.current(), true) != null)
+                    continue;
                 type = current.getClass();
 
                 //the value is a boxed primitive
@@ -51,14 +58,32 @@ public class ObjectSizer {
                     bytes = fast;
                     return true;
                 }
-                currentPeeler = Q[++index];
+
+                index++;
+                checkOverflow();
+
+                currentPeeler = Q[index];
                 bytes = currentPeeler.resetTo(type, this.current);
                 return true;
             } else {
+                Q[index].clear();
                 currentPeeler = --index >= 0 ? Q[index] : null;
             }
         }
         return false;
+    }
+
+    private void checkOverflow() {
+        if (index >= Q.length) {
+            int old = Q.length;
+            Q = Arrays.copyOf(Q, Q.length * 2);
+            for (int i = old; i < Q.length; i++)
+                Q[i] = new GenericPeeler(cache);
+        }
+    }
+
+    public int visitDepth() {
+        return index;
     }
 
     public Object current() {
@@ -80,9 +105,11 @@ public class ObjectSizer {
     public String path() {
         builder.setLength(0);
         for (int i = 1; i <= index; i++) {
-            ReferencePeeler peeler = Q[i];
-            builder.append('.');
-            builder.append(peeler.currentIndex());
+            Object index = Q[i].currentIndex();
+            if (index != null) {
+                builder.append('.');
+                builder.append(index);
+            }
         }
         return builder.toString();
     }

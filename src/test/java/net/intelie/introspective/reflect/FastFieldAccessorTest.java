@@ -1,38 +1,62 @@
 package net.intelie.introspective.reflect;
 
-import net.intelie.introspective.ThreadResources;
 import org.junit.Test;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.util.HashMap;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FastFieldAccessorTest {
     @Test
-    public void simpleTest() throws NoSuchFieldException {
+    public void testNormalCase() throws NoSuchFieldException {
+        assertAccessor("privateValue", "42");
+    }
 
-        Field field = HashMap.class.getDeclaredField("table");
+    @Test
+    public void testPublicCase() throws NoSuchFieldException {
+        assertAccessor(TestClass.class.getField("publicValue"), "43");
+        assertAccessor("publicValue", "43");
+    }
+
+    @Test
+    public void testPrimitives() throws NoSuchFieldException {
+        assertAccessor("primByte", (byte) 42);
+        assertAccessor("primShort", (short) 42);
+        assertAccessor("primInt", (int) 42);
+        assertAccessor("primLong", (long) 42);
+        assertAccessor("primFloat", 42f);
+        assertAccessor("primDouble", 42d);
+        assertAccessor("primBool", true);
+        assertAccessor("primChar", 'x');
+    }
+
+
+    private void assertAccessor(String fieldName, Object expectedValue) throws NoSuchFieldException {
+        Field field = TestClass.class.getDeclaredField(fieldName);
+        assertAccessor(field, expectedValue);
+    }
+
+    private void assertAccessor(Field field, Object expectedValue) {
+        TestClass test = new TestClass();
         FastFieldAccessor accessor = new FastFieldAccessor(field);
+        assertThat(accessor.get(test)).isEqualTo(expectedValue);
+        assertThat(accessor.name()).isEqualTo(field.getName());
 
-        for (int i = 0; i < 1000; i++) {
-            HashMap<Object, Object> map = new HashMap<>();
-            map.put(42, 42);
-            accessor.get(map);
-        }
+        FastFieldAccessor accessor2 = new FastFieldAccessor(field, false);
+        assertThat(accessor2.get(test)).isEqualTo(expectedValue);
+        assertThat(accessor2.name()).isEqualTo(field.getName());
+    }
 
-        HashMap<Object, Object> map = new HashMap<>();
-        map.put(42, 42);
-
-        long start = System.nanoTime();
-        long memStart = ThreadResources.allocatedBytes();
-        long total = 0;
-        for (int i = 0; i < 100000000; i++) {
-            total += Array.getLength(accessor.get(map));
-        }
-        System.out.println((ThreadResources.allocatedBytes() - memStart));
-        System.out.println(total);
-        System.out.println((System.nanoTime() - start) / 1e9);
+    private static class TestClass {
+        public String publicValue = "43";
+        private String privateValue = "42";
+        private byte primByte = 42;
+        private short primShort = 42;
+        private int primInt = 42;
+        private long primLong = 42;
+        private float primFloat = 42;
+        private double primDouble = 42;
+        private boolean primBool = true;
+        private char primChar = 'x';
     }
 }

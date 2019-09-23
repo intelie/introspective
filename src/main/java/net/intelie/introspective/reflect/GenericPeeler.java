@@ -12,21 +12,16 @@ public class GenericPeeler implements ReferencePeeler {
 
     @Override
     public void clear() {
-        object.clear();
-        array.clear();
+        current.clear();
         current = null;
     }
 
     @Override
     public long resetTo(Class<?> clazz, Object value) {
-        if (clazz.isArray()) {
-            object.clear();
-            current = array;
-        } else {
-            current = object;
-            array.clear();
-        }
-
+        ReferencePeeler newCurrent = clazz.isArray() ? array : object;
+        if (current != null && newCurrent != current)
+            current.clear();
+        current = newCurrent;
         return current.resetTo(clazz, value);
     }
 
