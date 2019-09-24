@@ -1,4 +1,6 @@
-package net.intelie.introspective.reflect;
+package net.intelie.introspective;
+
+import net.intelie.introspective.reflect.*;
 
 import java.util.Arrays;
 import java.util.IdentityHashMap;
@@ -11,6 +13,7 @@ public class ObjectSizer {
     private int index = 0;
     private Object current;
     private ReferencePeeler currentPeeler;
+    private boolean hasNextPeeler = false;
     private long bytes;
     private Class<?> type;
 
@@ -33,38 +36,52 @@ public class ObjectSizer {
         bytes = 0;
         seen.clear();
 
-        while (index > 0)
+        while (index >= 0)
             Q[index--].clear();
-        index = 0;
-        currentPeeler = Q[0];
-        currentPeeler.clear();
+        currentPeeler = null;
+        hasNextPeeler = false;
     }
 
     public void resetTo(Object obj) {
         clear();
-        currentPeeler.resetTo(null, obj);
+        if (obj != null) {
+            hasNextPeeler = true;
+            Q[0].resetTo(null, obj);
+        }
+    }
+
+    public boolean skipChildren() {
+        if (!hasNextPeeler)
+            return false;
+
+        Q[index + 1].clear();
+        hasNextPeeler = false;
+        return true;
     }
 
     public boolean moveNext() {
+        if (hasNextPeeler) {
+            currentPeeler = Q[++index];
+            hasNextPeeler = false;
+        }
+
         while (index >= 0) {
             if (currentPeeler.moveNext()) {
-                current = currentPeeler.current();
-                if (seen.put(current, true) != null)
+                Object currentObj = this.current = currentPeeler.current();
+                if (seen.put(currentObj, true) != null)
                     continue;
-                type = current.getClass();
+                Class<?> currentType = this.type = currentObj.getClass();
 
                 //the value is a boxed primitive
-                Long fast = JVMPrimitives.getFastPath(type);
-                if (fast != null) {
+                long fast = JVMPrimitives.getFastPath(currentType, currentObj);
+                if (fast >= 0) {
                     bytes = fast;
                     return true;
                 }
 
-                index++;
                 checkOverflow();
-
-                currentPeeler = Q[index];
-                bytes = currentPeeler.resetTo(type, this.current);
+                hasNextPeeler = true;
+                bytes = Q[index + 1].resetTo(currentType, currentObj);
                 return true;
             } else {
                 Q[index].clear();
@@ -75,7 +92,7 @@ public class ObjectSizer {
     }
 
     private void checkOverflow() {
-        if (index >= Q.length) {
+        if (index + 1 >= Q.length) {
             int old = Q.length;
             Q = Arrays.copyOf(Q, Q.length * 2);
             for (int i = old; i < Q.length; i++)
@@ -103,16 +120,20 @@ public class ObjectSizer {
         return bytes;
     }
 
+    public Object pathSegment(int index) {
+        return Q[index + 1].currentIndex();
+    }
+
     public String path() {
         builder.setLength(0);
-        for (int i = 1; i <= index; i++) {
-            Object index = Q[i].currentIndex();
-            if (index != null) {
-                builder.append('.');
-                builder.append(index);
+        for (int i = 0; i < index; i++) {
+            Object index = pathSegment(i);
+            if (index instanceof String) {
+                builder.append('.').append(index);
+            } else {
+                builder.append('[').append(index).append(']');
             }
         }
         return builder.toString();
     }
-
 }

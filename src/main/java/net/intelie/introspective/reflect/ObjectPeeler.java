@@ -5,6 +5,7 @@ public class ObjectPeeler implements ReferencePeeler {
     private ReflectionCache.Item cached;
     private Object obj;
     private int it;
+    private int count;
 
     private Object current;
 
@@ -17,6 +18,7 @@ public class ObjectPeeler implements ReferencePeeler {
         this.cached = null;
         this.obj = null;
         this.it = 0;
+        this.count = 0;
         this.current = null;
     }
 
@@ -26,17 +28,19 @@ public class ObjectPeeler implements ReferencePeeler {
         this.obj = value;
         this.it = 0;
         this.current = null;
+        this.count = cached.fieldCount();
         return cached.size();
 
     }
 
     @Override
     public boolean moveNext() {
-        int fieldCount = cached.fieldCount();
-        while (it < fieldCount) {
-            current = cached.value(obj, it++);
-            if (current != null)
+        while (it < count) {
+            Object obj = cached.value(this.obj, it++);
+            if (obj != null) {
+                current = obj;
                 return true;
+            }
         }
         return false;
     }

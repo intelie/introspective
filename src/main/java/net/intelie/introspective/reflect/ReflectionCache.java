@@ -2,10 +2,7 @@ package net.intelie.introspective.reflect;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class ReflectionCache {
@@ -18,7 +15,7 @@ public class ReflectionCache {
 
     public ReflectionCache(Predicate<Field> shouldFollow) {
         this.shouldFollow = shouldFollow;
-        this.cache = new IdentityHashMap<>();
+        this.cache = new HashMap<>(); //better performance than IdentityHashMap in this case
     }
 
     public Item get(Class<?> clazz) {
@@ -51,6 +48,8 @@ public class ReflectionCache {
 
             this.size = size;
             this.fields = peelable.toArray(new FastFieldAccessor[0]);
+            Arrays.sort(this.fields, Comparator.comparing(FastFieldAccessor::offset).reversed());
+            //don't know why reversed seems faster; won't argue
         }
 
         public long size() {

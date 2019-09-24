@@ -4,8 +4,6 @@ import net.intelie.introspective.util.UnsafeGetter;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +22,8 @@ public class JVMPrimitives {
     private static final int charOffset;
     private static final int objectOffset;
 
+    private static final StringFastPath stringFastPath;
+
     static {
         Experiments experiments = Experiments.get();
         oopSize = experiments.computeOopSize();
@@ -37,6 +37,7 @@ public class JVMPrimitives {
         booleanOffset = experiments.computeArrayBaseOffset(boolean[].class);
         charOffset = experiments.computeArrayBaseOffset(char[].class);
         objectOffset = experiments.computeArrayBaseOffset(Object[].class);
+        stringFastPath = new StringFastPath();
     }
 
     public static long getFieldOffset(Field field) {
@@ -76,7 +77,8 @@ public class JVMPrimitives {
         return oopSize;
     }
 
-    public static Long getFastPath(Class<?> clazz) {
+    public static long getFastPath(Class<?> clazz, Object obj) {
+        if (clazz == String.class) return stringFastPath.size((String) obj);
         if (clazz == Byte.class) return 12L + 1;
         if (clazz == Short.class) return 12L + 2;
         if (clazz == Integer.class) return 12L + 4;
@@ -85,7 +87,7 @@ public class JVMPrimitives {
         if (clazz == Double.class) return 12L + 8;
         if (clazz == Boolean.class) return 12L + 1;
         if (clazz == Character.class) return 12L + 2;
-        return null;
+        return -1;
     }
 
     public static long align(long v) {

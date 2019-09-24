@@ -5,9 +5,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.openjdk.jol.vm.LightVM;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -121,17 +119,25 @@ public class ObjectPeelerTest {
     @Ignore
     public void testPerformance() {
         ObjectPeeler peeler = new ObjectPeeler(cache);
-        TestClass obj = new TestClass("abc");
+
+//        Map obj = new LinkedHashMap();
+//        obj.put(111, Arrays.asList("aaa", 222));
+//        obj.put(333.0, Collections.singletonMap("bbb", 444));
+        TestClass obj = new TestClass("ccc");
+        Class<?> clazz = obj.getClass();
+
         for (int i = 0; i < 10000; i++) {
-            peeler.resetTo(TestClass.class, obj);
+            peeler.resetTo(clazz, obj);
             while (peeler.moveNext()) ;
         }
 
         long start = System.nanoTime();
+        long total = 0;
         for (int i = 0; i < 100000000; i++) {
-            peeler.resetTo(TestClass.class, obj);
-            while (peeler.moveNext()) ;
+            peeler.resetTo(clazz, obj);
+            while (peeler.moveNext()) total++;
         }
+        System.out.println(total);
         System.out.println((System.nanoTime() - start) / 1e9);
 
     }

@@ -15,6 +15,7 @@ public class FastFieldAccessor {
     private static final Unsafe U = UnsafeGetter.get();
     private final Deque<Supplier<Accessor>> accessors;
     private final String name;
+    private final long offset;
     private Accessor currentAccessor;
 
     public FastFieldAccessor(Field field) {
@@ -25,16 +26,19 @@ public class FastFieldAccessor {
         this.name = field.getName();
         this.accessors = new ArrayDeque<>();
 
-        if (allowUnsafe && U != null)
-            this.accessors.addLast(() -> unsafeAccessor(field));
+        if (allowUnsafe && U != null) {
+            offset = U.objectFieldOffset(field);
+            this.accessors.addLast(() -> unsafeAccessor(field, offset));
+        } else {
+            offset = 0;
+        }
         this.accessors.addLast(() -> reflectionAccessor(field));
         this.accessors.addLast(() -> obj -> null);
 
         moveToNextAccessor();
     }
 
-    private static Accessor unsafeAccessor(Field field) {
-        long offset = U.objectFieldOffset(field);
+    private static Accessor unsafeAccessor(Field field, long offset) {
         Class<?> type = field.getType();
         if (byte.class.equals(type))
             return x -> U.getByte(x, offset);
@@ -58,6 +62,10 @@ public class FastFieldAccessor {
     private static Accessor reflectionAccessor(Field field) {
         field.setAccessible(true);
         return x -> field.get(x);
+    }
+
+    public long offset() {
+        return offset;
     }
 
     private void moveToNextAccessor() {

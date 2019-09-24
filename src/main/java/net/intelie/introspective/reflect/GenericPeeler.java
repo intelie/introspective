@@ -25,6 +25,10 @@ public class GenericPeeler implements ReferencePeeler {
         return current.resetTo(clazz, value);
     }
 
+    public ReferencePeeler peeler() {
+        return current;
+    }
+
     @Override
     public boolean moveNext() {
         return current.moveNext();

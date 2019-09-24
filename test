@@ -17,4 +17,6 @@ testwith maven:3-jdk-10
 testwith maven:3-jdk-11
 testwith maven:3-jdk-12
 testwith maven:3-jdk-13
+testwith maven:3-amazoncorretto-8
+testwith maven:3-amazoncorretto-11
 
