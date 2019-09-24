@@ -3,12 +3,15 @@ package net.intelie.introspective;
 import net.intelie.introspective.reflect.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Set;
 
 public class ObjectSizer {
     private final StringBuilder builder = new StringBuilder();
-    private final IdentityHashMap<Object, Object> seen = new IdentityHashMap<>();
     private final ReflectionCache cache;
+    private final int maxRecentlySeen;
+    private final Set<Object> seen = Collections.newSetFromMap(new IdentityHashMap<>());
     private ReferencePeeler[] Q;
     private int index = 0;
     private Object current;
@@ -18,11 +21,12 @@ public class ObjectSizer {
     private Class<?> type;
 
     public ObjectSizer() {
-        this(new ReflectionCache());
+        this(new ReflectionCache(), 1 << 16);
     }
 
-    public ObjectSizer(ReflectionCache cache) {
+    public ObjectSizer(ReflectionCache cache, int maxRecentlySeen) {
         this.cache = cache;
+        this.maxRecentlySeen = maxRecentlySeen;
         this.Q = new ReferencePeeler[16];
         Q[0] = new ConstantDummyPeeler();
         for (int i = 1; i < Q.length; i++) {
@@ -68,8 +72,9 @@ public class ObjectSizer {
         while (index >= 0) {
             if (currentPeeler.moveNext()) {
                 Object currentObj = this.current = currentPeeler.current();
-                if (seen.put(currentObj, true) != null)
+                if (!seen.add(currentObj))
                     continue;
+
                 Class<?> currentType = this.type = currentObj.getClass();
 
                 //the value is a boxed primitive

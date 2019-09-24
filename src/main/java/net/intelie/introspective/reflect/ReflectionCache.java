@@ -48,8 +48,6 @@ public class ReflectionCache {
 
             this.size = size;
             this.fields = peelable.toArray(new FastFieldAccessor[0]);
-            Arrays.sort(this.fields, Comparator.comparing(FastFieldAccessor::offset).reversed());
-            //don't know why reversed seems faster; won't argue
         }
 
         public long size() {
