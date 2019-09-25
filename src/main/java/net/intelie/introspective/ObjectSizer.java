@@ -1,6 +1,7 @@
 package net.intelie.introspective;
 
 import net.intelie.introspective.reflect.*;
+import net.intelie.introspective.util.VisitedSet;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,8 +11,7 @@ import java.util.Set;
 public class ObjectSizer {
     private final StringBuilder builder = new StringBuilder();
     private final ReflectionCache cache;
-    private final int maxRecentlySeen;
-    private final Set<Object> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+    private final VisitedSet<Object> seen;
     private ReferencePeeler[] Q;
     private int index = 0;
     private Object current;
@@ -26,7 +26,7 @@ public class ObjectSizer {
 
     public ObjectSizer(ReflectionCache cache, int maxRecentlySeen) {
         this.cache = cache;
-        this.maxRecentlySeen = maxRecentlySeen;
+        this.seen = new VisitedSet<>(maxRecentlySeen);
         this.Q = new ReferencePeeler[16];
         Q[0] = new ConstantDummyPeeler();
         for (int i = 1; i < Q.length; i++) {
@@ -47,7 +47,9 @@ public class ObjectSizer {
     }
 
     public void resetTo(Object obj) {
-        clear();
+        seen.softClear();
+        index = -1;
+        currentPeeler = null;
         if (obj != null) {
             hasNextPeeler = true;
             Q[0].resetTo(null, obj);
@@ -69,10 +71,10 @@ public class ObjectSizer {
             hasNextPeeler = false;
         }
 
-        while (index >= 0) {
+        while (currentPeeler != null) {
             if (currentPeeler.moveNext()) {
                 Object currentObj = this.current = currentPeeler.current();
-                if (!seen.add(currentObj))
+                if (!seen.enter(currentObj))
                     continue;
 
                 Class<?> currentType = this.type = currentObj.getClass();
@@ -81,6 +83,7 @@ public class ObjectSizer {
                 long fast = JVMPrimitives.getFastPath(currentType, currentObj);
                 if (fast >= 0) {
                     bytes = fast;
+                    seen.exit(currentObj);
                     return true;
                 }
 
@@ -90,7 +93,9 @@ public class ObjectSizer {
                 return true;
             } else {
                 Q[index].clear();
-                currentPeeler = --index >= 0 ? Q[index] : null;
+                ReferencePeeler peeler = currentPeeler = --index >= 0 ? Q[index] : null;
+                if (peeler != null)
+                    seen.exit(peeler.current());
             }
         }
         return false;

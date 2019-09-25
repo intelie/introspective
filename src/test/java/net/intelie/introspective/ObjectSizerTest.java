@@ -191,10 +191,10 @@ public class ObjectSizerTest {
         long total = 0;
         for (int i = 0; i < 10000000; i++) {
             sizer.resetTo(test);
-            while (sizer.moveNext()) total += sizer.bytes();
+            while (sizer.moveNext()) total += 1;
         }
-        System.out.println(total);
         System.out.println((ThreadResources.allocatedBytes(Thread.currentThread()) - memStart));
+        System.out.println(total);
         System.out.println((System.nanoTime() - start) / 1e9);
 
     }
