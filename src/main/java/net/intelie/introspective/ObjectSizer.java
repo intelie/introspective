@@ -13,6 +13,7 @@ public class ObjectSizer {
     private final ReflectionCache cache;
     private final VisitedSet<Object> seen;
     private ReferencePeeler[] Q;
+    private int[] Qindex;
     private int index = 0;
     private Object current;
     private ReferencePeeler currentPeeler;
@@ -21,13 +22,14 @@ public class ObjectSizer {
     private Class<?> type;
 
     public ObjectSizer() {
-        this(new ReflectionCache(), 1 << 16);
+        this(new ReflectionCache(), 1<<24);
     }
 
     public ObjectSizer(ReflectionCache cache, int maxRecentlySeen) {
         this.cache = cache;
         this.seen = new VisitedSet<>(maxRecentlySeen);
         this.Q = new ReferencePeeler[16];
+        this.Qindex = new int[16];
         Q[0] = new ConstantDummyPeeler();
         for (int i = 1; i < Q.length; i++) {
             Q[i] = new GenericPeeler(cache);
@@ -74,7 +76,8 @@ public class ObjectSizer {
         while (currentPeeler != null) {
             if (currentPeeler.moveNext()) {
                 Object currentObj = this.current = currentPeeler.current();
-                if (!seen.enter(currentObj))
+                int enterIndex = seen.enter(currentObj);
+                if (enterIndex < 0)
                     continue;
 
                 Class<?> currentType = this.type = currentObj.getClass();
@@ -83,19 +86,20 @@ public class ObjectSizer {
                 long fast = JVMPrimitives.getFastPath(currentType, currentObj);
                 if (fast >= 0) {
                     bytes = fast;
-                    seen.exit(currentObj);
+                    seen.exit(currentObj, enterIndex);
                     return true;
                 }
 
                 checkOverflow();
                 hasNextPeeler = true;
                 bytes = Q[index + 1].resetTo(currentType, currentObj);
+                Qindex[index + 1] = enterIndex;
                 return true;
             } else {
                 Q[index].clear();
                 ReferencePeeler peeler = currentPeeler = --index >= 0 ? Q[index] : null;
                 if (peeler != null)
-                    seen.exit(peeler.current());
+                    seen.exit(peeler.current(), Qindex[index]);
             }
         }
         return false;
@@ -105,6 +109,7 @@ public class ObjectSizer {
         if (index + 1 >= Q.length) {
             int old = Q.length;
             Q = Arrays.copyOf(Q, Q.length * 2);
+            Qindex = Arrays.copyOf(Qindex, Qindex.length * 2);
             for (int i = old; i < Q.length; i++)
                 Q[i] = new GenericPeeler(cache);
         }

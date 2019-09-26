@@ -4,111 +4,145 @@ import java.util.*;
 
 @SuppressWarnings("unchecked")
 public class VisitedSet<E> {
-    private static final int MULTIPLIER = 4;
-    private final long[] gen;
-    private final E[] table;
+    public static final long MAX_VALUE_STEP = 1L << 32;
+    private final Random random = new Random(0);
     private final int maxSize;
     private final int mask;
+    private final int maxEnters;
+    private final E[] table;
+    private final long[] gen;
 
-    private long currentMaster;
+    //used only for rehashing
+    private final E[] tempTable;
+    private final long[] tempGen;
+
+    private long maxValue = 0;
+    private int untilRehash;
     private long currentEnter;
     private long currentExit;
+    private int seed;
+
+    public static long TOTAL = 0;
 
     public VisitedSet(int maxSize) {
         Preconditions.checkArgument(Integer.bitCount(maxSize) == 1, "Max size must be a power of two");
         this.maxSize = maxSize;
-        this.gen = new long[MULTIPLIER * maxSize];
-        this.table = (E[]) new Object[MULTIPLIER * maxSize];
+        this.table = (E[]) new Object[4 * maxSize];
+        this.gen = new long[4 * maxSize];
+
+        this.tempTable = (E[]) new Object[maxSize];
+        this.tempGen = new long[maxSize];
         this.mask = gen.length - 1;
+        this.maxEnters = table.length / 4;
         clear();
     }
 
     public void clear() {
-        currentMaster = -(1L << 32);
-        Arrays.fill(gen, currentMaster);
+        clearGen();
+        Arrays.fill(tempTable, null);
         Arrays.fill(table, null);
-        softClear();
+        seed = random.nextInt();
+        maxValue = MAX_VALUE_STEP;
+    }
+
+    private void clearGen() {
+        Arrays.fill(gen, Long.MIN_VALUE);
+        currentEnter = currentExit = 0;
+        untilRehash = maxEnters;
     }
 
     public void softClear() {
-        currentMaster += 1L << 32;
-        currentEnter = currentMaster + maxSize;
-        currentExit = currentMaster + maxSize;
+        if (currentEnter > Long.MAX_VALUE / 2) {
+            clear();
+        } else {
+            currentEnter = currentExit = maxValue;
+            seed = random.nextInt();
+            maxValue += MAX_VALUE_STEP;
+        }
     }
 
-    public boolean enter(Object obj) {
-        long cutGen = currentEnter - maxSize;
-        if (currentExit <= cutGen) return false;
+    private int findSpot(Object obj, long cutGen) {
+        int index = hash(obj) & this.mask;
+        int count = 0;
+        int first = -1;
 
-        int mask = this.mask;
-        long[] gen = this.gen;
-        E[] table = this.table;
-        long currentMaster = this.currentMaster;
-
-        int read = hash(obj) & mask;
-        int write = read;
-
-        for (long genRead = gen[read]; genRead >= currentMaster; genRead = gen[read]) {
+        for (long genRead = gen[index]; genRead > Long.MIN_VALUE; genRead = gen[index]) {
+            count++;
             if (genRead > cutGen) {
-                if (table[read] == obj)
-                    return false;
-                gen[read] = Long.MIN_VALUE;
-                gen[write] = genRead;
-                table[write] = table[read];
-                write = (write + 1) & mask;
-            } else if (genRead == cutGen && table[read] == obj) {
-                return false;
-            } else {
-                gen[read] = Long.MIN_VALUE;
+                if (table[index] == obj)
+                    return ~index;
+            } else if (first < 0) {
+                first = index;
             }
-            read = (read + 1) & mask;
+            index = (index + 1) & this.mask;
         }
 
-        table[write] = (E) obj;
-        gen[write] = currentMaster + Integer.MAX_VALUE;
+        TOTAL += count;
+        return first >= 0 ? first : index;
+    }
+
+    public int enter(Object obj) {
+        long cutGen = currentEnter - maxSize;
+        if (currentExit <= cutGen) return Integer.MIN_VALUE;
+
+        int index = findSpot(obj, cutGen);
+        if (index < 0) return index;
+
+        if (gen[index] == Long.MIN_VALUE)
+            untilRehash--;
+
+        table[index] = (E) obj;
+        gen[index] = maxValue;
         currentEnter++;
+        if (untilRehash == 0 || currentEnter == maxValue)
+            rehash();
+        return index;
+    }
+
+    public boolean exit(Object obj, int hint) {
+        int index = table[hint] == obj && gen[hint] > currentEnter - maxSize ? hint :
+                ~findSpot(obj, currentEnter - maxSize);
+        if (index < 0) return false;
+        gen[index] = ++currentExit;
         return true;
     }
 
-    public int hash(Object obj) {
-        return System.identityHashCode(obj);
-    }
-
     public boolean contains(Object obj) {
-        long cutGen = currentEnter - maxSize;
-
-        int mask = this.mask;
-        long[] gen = this.gen;
-        E[] table = this.table;
-        long currentMaster = this.currentMaster;
-
-        int read = hash(obj) & mask;
-
-        for (long genRead = gen[read]; genRead >= currentMaster; genRead = gen[read]) {
-            if (genRead >= cutGen && table[read] == obj)
-                return true;
-            read = (read + 1) & mask;
-        }
-
-        return false;
+        return findSpot(obj, currentEnter - maxSize) < 0;
     }
 
-    public boolean exit(Object obj) {
-        int mask = this.mask;
-        long[] gen = this.gen;
-        E[] table = this.table;
-        long currentMaster = this.currentMaster;
+    private void rehash() {
+        long cutGen = currentEnter - maxSize;
+        int count = 0;
+        int exits = 0;
 
-        int read = hash(obj) & mask;
-
-        while (gen[read] >= currentMaster) {
-            if (table[read] == obj) {
-                gen[read] = currentExit++;
-                return true;
+        for (int i = 0; i < table.length; i++) {
+            long geni = gen[i];
+            if (geni > cutGen) {
+                tempTable[count] = table[i];
+                if (geni == maxValue) {
+                    tempGen[count] = maxValue + MAX_VALUE_STEP;
+                } else {
+                    tempGen[count] = geni - cutGen;
+                    exits++;
+                }
+                count++;
             }
-            read = (read + 1) & mask;
         }
+        clearGen();
+        for (int i = 0; i < count; i++) {
+            E obj = tempTable[i];
+            int index = findSpot(obj, currentEnter);
+            table[index] = obj;
+            gen[index] = tempGen[i];
+            untilRehash--;
+        }
+        currentEnter = count;
+        currentExit = exits;
+        //System.out.println("REHASH END");
+    }
 
-        return false;
+    public int hash(Object obj) {
+        return System.identityHashCode(obj) ^ seed;
     }
 }

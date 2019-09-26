@@ -4,6 +4,7 @@ import net.intelie.introspective.ObjectSizer;
 import net.intelie.introspective.ThreadResources;
 import net.intelie.introspective.reflect.StringFastPath;
 import net.intelie.introspective.reflect.TestSizeUtils;
+import net.intelie.introspective.util.VisitedSet;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openjdk.jol.info.ClassLayout;
@@ -189,13 +190,14 @@ public class ObjectSizerTest {
         long start = System.nanoTime();
         long memStart = ThreadResources.allocatedBytes(Thread.currentThread());
         long total = 0;
-        for (int i = 0; i < 10000000; i++) {
+        for (int i = 0; i < 1000000; i++) {
             sizer.resetTo(test);
             while (sizer.moveNext()) total += 1;
         }
         System.out.println((ThreadResources.allocatedBytes(Thread.currentThread()) - memStart));
         System.out.println(total);
         System.out.println((System.nanoTime() - start) / 1e9);
+        System.out.println(VisitedSet.TOTAL);
 
     }
 
