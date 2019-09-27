@@ -38,7 +38,7 @@ public class ExpiringVisitedSet implements VisitedSet {
         this.tempTable = new Object[requiredSize];
         this.tempGen = new long[requiredSize];
         this.mask = tableSize - 1;
-        clear();
+        clearGen();
     }
 
     @Override
@@ -98,7 +98,6 @@ public class ExpiringVisitedSet implements VisitedSet {
         }
 
         DEBUG_COLLISIONS += count;
-
         table[index] = obj;
         gen[index] = maxValue;
         if (++currentEnter >= maxValue)

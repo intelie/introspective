@@ -23,7 +23,7 @@ public class ObjectSizer {
         this(new ExpiringVisitedSet(1 << 16));
     }
 
-    public ObjectSizer(VisitedSet seen) {
+    public ObjectSizer(ExpiringVisitedSet seen) {
         this.cache = new ReflectionCache();
         this.seen = seen;
         this.stack = new ReferencePeeler[16];
@@ -78,7 +78,6 @@ public class ObjectSizer {
                 if (enterIndex < 0)
                     continue;
 
-
                 Class<?> currentType = this.type = currentObj.getClass();
 
                 //the value is a boxed primitive
@@ -88,8 +87,8 @@ public class ObjectSizer {
                     seen.exit(currentObj, enterIndex);
                     return true;
                 }
-                stackExit[index] = enterIndex;
 
+                stackExit[index] = enterIndex;
                 checkOverflow();
                 hasNextPeeler = true;
                 bytes = stack[index + 1].resetTo(currentType, currentObj);
