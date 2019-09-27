@@ -23,7 +23,7 @@ public class ObjectSizer {
         this(new ExpiringVisitedSet(1 << 16));
     }
 
-    public ObjectSizer(ExpiringVisitedSet seen) {
+    public ObjectSizer(VisitedSet seen) {
         this.cache = new ReflectionCache();
         this.seen = seen;
         this.stack = new ReferencePeeler[16];

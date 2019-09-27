@@ -69,10 +69,11 @@ public class ExpiringVisitedSet implements VisitedSet {
 
         int count = 0;
         while (gen[index] > minValue) {
-            count++;
             if (table[index] == obj)
                 return ~index;
+
             //quadratic probing
+            count++;
             index = (index + count * count) & mask;
         }
 
@@ -90,10 +91,10 @@ public class ExpiringVisitedSet implements VisitedSet {
 
         int count = 0;
         while (gen[index] > minValue) {
-            count++;
             if (table[index] == obj)
                 return ~index;
             //quadratic probing
+            count++;
             index = (index + count * count) & mask;
         }
 
