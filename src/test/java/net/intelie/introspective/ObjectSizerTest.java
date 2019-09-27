@@ -1,10 +1,8 @@
 package net.intelie.introspective;
 
-import net.intelie.introspective.ObjectSizer;
-import net.intelie.introspective.ThreadResources;
 import net.intelie.introspective.reflect.StringFastPath;
 import net.intelie.introspective.reflect.TestSizeUtils;
-import net.intelie.introspective.util.VisitedSet;
+import net.intelie.introspective.util.ExpiringVisitedSet;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.openjdk.jol.info.ClassLayout;
@@ -12,6 +10,7 @@ import org.openjdk.jol.vm.LightVM;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -174,33 +173,6 @@ public class ObjectSizerTest {
         return size;
     }
 
-    @Test
-    @Ignore
-    public void testPerformance() {
-        ObjectSizer sizer = new ObjectSizer();
-        Map test = new HashMap();
-        test.put(111, Arrays.asList("aaa", 222));
-        test.put(333.0, Collections.singletonMap("bbb", 444));
-
-        for (int i = 0; i < 100000; i++) {
-            sizer.resetTo(test);
-            while (sizer.moveNext()) ;
-        }
-
-        long start = System.nanoTime();
-        long memStart = ThreadResources.allocatedBytes(Thread.currentThread());
-        long total = 0;
-        for (int i = 0; i < 1000000; i++) {
-            sizer.resetTo(test);
-            while (sizer.moveNext()) total += 1;
-        }
-        System.out.println((ThreadResources.allocatedBytes(Thread.currentThread()) - memStart));
-        System.out.println(total);
-        System.out.println((System.nanoTime() - start) / 1e9);
-        System.out.println(VisitedSet.TOTAL);
-
-    }
-
     private class TestClass {
         private byte primByte;
         private short primShort;
@@ -210,6 +182,7 @@ public class ObjectSizerTest {
         private double primDouble;
         private boolean primBool;
         private char primChar;
+
 
         private Byte boxedByte = 1;
         private Short boxedShort = 2;

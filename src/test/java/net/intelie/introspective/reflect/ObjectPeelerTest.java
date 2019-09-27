@@ -115,34 +115,6 @@ public class ObjectPeelerTest {
         assertThat((ThreadResources.allocatedBytes(Thread.currentThread()) - start) / 1000).isEqualTo(0);
     }
 
-    @Test
-    @Ignore
-    public void testPerformance() {
-        ObjectPeeler peeler = new ObjectPeeler(cache);
-
-//        Map obj = new LinkedHashMap();
-//        obj.put(111, Arrays.asList("aaa", 222));
-//        obj.put(333.0, Collections.singletonMap("bbb", 444));
-        TestClass obj = new TestClass("ccc");
-        Class<?> clazz = obj.getClass();
-
-        for (int i = 0; i < 10000; i++) {
-            peeler.resetTo(clazz, obj);
-            while (peeler.moveNext()) ;
-        }
-
-        long start = System.nanoTime();
-        long total = 0;
-        for (int i = 0; i < 100000000; i++) {
-            peeler.resetTo(clazz, obj);
-            while (peeler.moveNext()) total++;
-        }
-        System.out.println(total);
-        System.out.println((System.nanoTime() - start) / 1e9);
-
-    }
-
-
     private void assertNext(ReferencePeeler peeler, Object index, Object value) {
         assertThat(peeler.moveNext()).isTrue();
         assertThat(peeler.currentIndex()).isEqualTo(index);

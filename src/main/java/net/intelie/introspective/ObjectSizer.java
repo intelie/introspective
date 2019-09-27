@@ -1,19 +1,17 @@
 package net.intelie.introspective;
 
 import net.intelie.introspective.reflect.*;
+import net.intelie.introspective.util.ExpiringVisitedSet;
 import net.intelie.introspective.util.VisitedSet;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
 
 public class ObjectSizer {
     private final StringBuilder builder = new StringBuilder();
     private final ReflectionCache cache;
-    private final VisitedSet<Object> seen;
-    private ReferencePeeler[] Q;
-    private int[] Qindex;
+    private final VisitedSet seen;
+    private ReferencePeeler[] stack;
+    private int[] stackExit;
     private int index = 0;
     private Object current;
     private ReferencePeeler currentPeeler;
@@ -22,17 +20,17 @@ public class ObjectSizer {
     private Class<?> type;
 
     public ObjectSizer() {
-        this(new ReflectionCache(), 1<<24);
+        this(new ExpiringVisitedSet(1 << 16));
     }
 
-    public ObjectSizer(ReflectionCache cache, int maxRecentlySeen) {
-        this.cache = cache;
-        this.seen = new VisitedSet<>(maxRecentlySeen);
-        this.Q = new ReferencePeeler[16];
-        this.Qindex = new int[16];
-        Q[0] = new ConstantDummyPeeler();
-        for (int i = 1; i < Q.length; i++) {
-            Q[i] = new GenericPeeler(cache);
+    public ObjectSizer(VisitedSet seen) {
+        this.cache = new ReflectionCache();
+        this.seen = seen;
+        this.stack = new ReferencePeeler[16];
+        this.stackExit = new int[16];
+        stack[0] = new ConstantDummyPeeler();
+        for (int i = 1; i < stack.length; i++) {
+            stack[i] = new GenericPeeler(cache);
         }
     }
 
@@ -43,7 +41,7 @@ public class ObjectSizer {
         seen.clear();
 
         while (index >= 0)
-            Q[index--].clear();
+            stack[index--].clear();
         currentPeeler = null;
         hasNextPeeler = false;
     }
@@ -54,7 +52,7 @@ public class ObjectSizer {
         currentPeeler = null;
         if (obj != null) {
             hasNextPeeler = true;
-            Q[0].resetTo(null, obj);
+            stack[0].resetTo(null, obj);
         }
     }
 
@@ -62,14 +60,14 @@ public class ObjectSizer {
         if (!hasNextPeeler)
             return false;
 
-        Q[index + 1].clear();
+        stack[index + 1].clear();
         hasNextPeeler = false;
         return true;
     }
 
     public boolean moveNext() {
         if (hasNextPeeler) {
-            currentPeeler = Q[++index];
+            currentPeeler = stack[++index];
             hasNextPeeler = false;
         }
 
@@ -80,6 +78,7 @@ public class ObjectSizer {
                 if (enterIndex < 0)
                     continue;
 
+
                 Class<?> currentType = this.type = currentObj.getClass();
 
                 //the value is a boxed primitive
@@ -89,29 +88,29 @@ public class ObjectSizer {
                     seen.exit(currentObj, enterIndex);
                     return true;
                 }
+                stackExit[index] = enterIndex;
 
                 checkOverflow();
                 hasNextPeeler = true;
-                bytes = Q[index + 1].resetTo(currentType, currentObj);
-                Qindex[index + 1] = enterIndex;
+                bytes = stack[index + 1].resetTo(currentType, currentObj);
                 return true;
             } else {
-                Q[index].clear();
-                ReferencePeeler peeler = currentPeeler = --index >= 0 ? Q[index] : null;
+                stack[index].clear();
+                ReferencePeeler peeler = currentPeeler = --index >= 0 ? stack[index] : null;
                 if (peeler != null)
-                    seen.exit(peeler.current(), Qindex[index]);
+                    seen.exit(peeler.current(), stackExit[index]);
             }
         }
         return false;
     }
 
     private void checkOverflow() {
-        if (index + 1 >= Q.length) {
-            int old = Q.length;
-            Q = Arrays.copyOf(Q, Q.length * 2);
-            Qindex = Arrays.copyOf(Qindex, Qindex.length * 2);
-            for (int i = old; i < Q.length; i++)
-                Q[i] = new GenericPeeler(cache);
+        if (index + 1 >= stack.length) {
+            int old = stack.length;
+            stack = Arrays.copyOf(stack, stack.length * 2);
+            stackExit = Arrays.copyOf(stackExit, stackExit.length * 2);
+            for (int i = old; i < stack.length; i++)
+                stack[i] = new GenericPeeler(cache);
         }
     }
 
@@ -136,7 +135,7 @@ public class ObjectSizer {
     }
 
     public Object pathSegment(int index) {
-        return Q[index + 1].currentIndex();
+        return stack[index + 1].currentIndex();
     }
 
     public String path() {

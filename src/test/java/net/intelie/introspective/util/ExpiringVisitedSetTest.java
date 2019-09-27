@@ -2,19 +2,14 @@ package net.intelie.introspective.util;
 
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
 
-public class VisitedSetTest {
+public class ExpiringVisitedSetTest {
 
     @Test
     public void testMany() {
-        VisitedSet<Object> set = new VisitedSet<>(1 << 8);
-        for (int j = 0; j < 10000; j++) {
+        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 8);
+        for (int j = 0; j < 1000; j++) {
             set.softClear();
             for (int i = 0; i < 16; i++) {
                 Object obj = new Object();
@@ -22,13 +17,11 @@ public class VisitedSetTest {
                 assertThat(set.exit(obj, 0)).isTrue();
             }
         }
-
     }
 
     @Test
     public void testExpireInTheMiddle() {
-        VisitedSet<Object> set = new VisitedSet<Object>(2) {
-            @Override
+        ExpiringVisitedSet set = new ExpiringVisitedSet(2, 2, 8) {
             public int hash(Object obj) {
                 return obj.hashCode();
             }
@@ -46,19 +39,14 @@ public class VisitedSetTest {
         set.enter(c1b);
 
         //at this point, if [1] = c2, [2] = c1b, things are broken
-        assertThat(set.contains(c1)).isFalse();
-        assertThat(set.contains(c1b)).isTrue();
-        assertThat(set.contains(c2)).isTrue();
+        assertThat(set.contains(c1)).isLessThan(0);
+        assertThat(set.contains(c1b)).isGreaterThanOrEqualTo(0);
+        assertThat(set.contains(c2)).isGreaterThanOrEqualTo(0);
     }
 
     @Test
     public void testAvoidOverwrite() {
-        VisitedSet<Object> set = new VisitedSet<Object>(4) {
-            @Override
-            public int hash(Object obj) {
-                return obj.hashCode();
-            }
-        };
+        ExpiringVisitedSet set = new ExpiringVisitedSet(4);
 
         Custom c1 = new Custom(1);
         Custom c2 = new Custom(2);
@@ -68,45 +56,45 @@ public class VisitedSetTest {
         set.enter(c2);
         set.enter(c1b);
 
-        assertThat(set.contains(c1)).isTrue();
-        assertThat(set.contains(c1b)).isTrue();
-        assertThat(set.contains(c2)).isTrue();
+        assertThat(set.contains(c1)).isGreaterThanOrEqualTo(0);
+        assertThat(set.contains(c1b)).isGreaterThanOrEqualTo(0);
+        assertThat(set.contains(c2)).isGreaterThanOrEqualTo(0);
     }
 
     @Test
     public void testAddingAgain() {
-        VisitedSet<Object> set = new VisitedSet<>(16);
+        ExpiringVisitedSet set = new ExpiringVisitedSet(16);
 
         Object obj = new Object();
 
-        assertThat(set.contains(obj)).isFalse();
+        assertThat(set.contains(obj)).isLessThan(0);
         int index = set.enter(obj);
         assertThat(index).isGreaterThan(0);
 
-        assertThat(set.contains(obj)).isTrue();
+        assertThat(set.contains(obj)).isGreaterThanOrEqualTo(0);
         assertThat(set.enter(obj)).isEqualTo(~index);
 
-        assertThat(set.contains(obj)).isTrue();
+        assertThat(set.contains(obj)).isGreaterThanOrEqualTo(0);
         assertThat(set.enter(obj)).isEqualTo(~index);
     }
 
     @Test
     public void testAddingPastEnd() {
         Object[] objs = new Object[16];
-        VisitedSet<Object> set = new VisitedSet<>(objs.length);
+        ExpiringVisitedSet set = new ExpiringVisitedSet(objs.length);
 
         for (int i = 0; i < objs.length; i++) {
             objs[i] = new Object();
             assertThat(set.enter(objs[i])).isGreaterThanOrEqualTo(0);
         }
         for (int i = 0; i < objs.length; i++) {
-            assertThat(set.contains(objs[i])).isTrue();
+            assertThat(set.contains(objs[i])).isGreaterThanOrEqualTo(0);
         }
         assertThat(set.enter(new Object())).isLessThan(0);
         set.softClear();
 
         for (int i = 0; i < objs.length; i++) {
-            assertThat(set.contains(objs[i])).isFalse();
+            assertThat(set.contains(objs[i])).isLessThan(0);
         }
 
         for (int i = 0; i < objs.length; i++) {
@@ -119,12 +107,13 @@ public class VisitedSetTest {
     @Test
     public void testExit() {
         Object[] objs = new Object[4];
-        VisitedSet<Object> set = new VisitedSet<>(objs.length);
+        ExpiringVisitedSet set = new ExpiringVisitedSet(objs.length, objs.length, 4 * objs.length);
+        set.softClear();
 
         for (int i = 0; i < objs.length; i++) {
             objs[i] = new Object();
             assertThat(set.enter(objs[i])).isGreaterThanOrEqualTo(0);
-            assertThat(set.contains(objs[i])).isTrue();
+            assertThat(set.contains(objs[i])).isGreaterThanOrEqualTo(0);
         }
 
         assertThat(set.enter(new Object())).isLessThan(0);
