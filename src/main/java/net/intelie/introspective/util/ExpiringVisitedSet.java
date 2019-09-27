@@ -55,7 +55,7 @@ public class ExpiringVisitedSet implements VisitedSet {
 
     @Override
     public void softClear() {
-        if (maxValue >= Long.MAX_VALUE - rehashThreshold) {
+        if (maxValue > Long.MAX_VALUE - rehashThreshold) {
             clear();
         } else {
             currentEnter = currentExit = minValue = maxValue; //reset minima to latest maximum
