@@ -7,20 +7,22 @@ public class ExpiringVisitedSet implements VisitedSet {
     private final int rehashThreshold;
     private final int mask;
     private final Object[] table;
-    private final long[] gen;
+    private final int[] gen;
     //used only for rehashing
     private final Object[] tempTable;
-    private final long[] tempGen;
+    private final int[] tempGen;
 
     public long DEBUG_COLLISIONS = 0;
     public long DEBUG_REHASHES = 0;
     public long DEBUG_REHASHES_TIME = 0;
+    public long DEBUG_HARDCLEARS = 0;
+    public long DEBUG_HARDCLEARS_TIME = 0;
     public long DEBUG_EXIT_MISS = 0;
 
-    private long minValue;
-    private long maxValue;
-    private long currentEnter;
-    private long currentExit;
+    private int minValue;
+    private int maxValue;
+    private int currentEnter;
+    private int currentExit;
 
     public ExpiringVisitedSet(int requiredSize) {
         this(requiredSize, 3 * requiredSize, 4 * requiredSize);
@@ -33,10 +35,10 @@ public class ExpiringVisitedSet implements VisitedSet {
         this.requiredSize = requiredSize;
         this.rehashThreshold = rehashThreshold;
         this.table = new Object[tableSize];
-        this.gen = new long[tableSize];
+        this.gen = new int[tableSize];
 
         this.tempTable = new Object[requiredSize];
-        this.tempGen = new long[requiredSize];
+        this.tempGen = new int[requiredSize];
         this.mask = tableSize - 1;
         clearGen();
     }
@@ -49,14 +51,17 @@ public class ExpiringVisitedSet implements VisitedSet {
     }
 
     private void clearGen() {
-        Arrays.fill(gen, currentEnter = currentExit = minValue = Long.MIN_VALUE);
+        Arrays.fill(gen, currentEnter = currentExit = minValue = Integer.MIN_VALUE);
         maxValue = minValue + rehashThreshold;  //new maximum
     }
 
     @Override
     public void softClear() {
-        if (maxValue > Long.MAX_VALUE - rehashThreshold) {
-            clear();
+        if (maxValue > Integer.MAX_VALUE - rehashThreshold) {
+            DEBUG_HARDCLEARS++;
+            long DEBUG_START = System.nanoTime();
+            clearGen();
+            DEBUG_HARDCLEARS_TIME += System.nanoTime() - DEBUG_START;
         } else {
             currentEnter = currentExit = minValue = maxValue; //reset minima to latest maximum
             maxValue = minValue + rehashThreshold;  //new maximum
@@ -67,17 +72,16 @@ public class ExpiringVisitedSet implements VisitedSet {
         //this code is repeated in enter() for speed
         int index = System.identityHashCode(obj) & mask;
 
-        int count = 0;
+        int collisions = 0;
         while (gen[index] > minValue) {
             if (table[index] == obj)
                 return ~index;
-
             //quadratic probing
-            count++;
-            index = (index + count * count) & mask;
+            collisions++;
+            index = (index + collisions * collisions) & mask;
         }
 
-        DEBUG_COLLISIONS += count;
+        DEBUG_COLLISIONS += collisions;
         return index;
     }
 
@@ -89,16 +93,16 @@ public class ExpiringVisitedSet implements VisitedSet {
         //same code as in findIndex(), inlined here for performance
         int index = System.identityHashCode(obj) & mask;
 
-        int count = 0;
+        int collisions = 0;
         while (gen[index] > minValue) {
             if (table[index] == obj)
                 return ~index;
             //quadratic probing
-            count++;
-            index = (index + count * count) & mask;
+            collisions++;
+            index = (index + collisions * collisions) & mask;
         }
 
-        DEBUG_COLLISIONS += count;
+        DEBUG_COLLISIONS += collisions;
         table[index] = obj;
         gen[index] = maxValue;
         if (++currentEnter >= maxValue)
@@ -127,7 +131,7 @@ public class ExpiringVisitedSet implements VisitedSet {
         long DEBUG_START = System.nanoTime();
 
         //we only keep the "requiredSize" most recent items after rehash
-        long cutGen = Math.max(currentEnter - requiredSize, minValue);
+        int cutGen = Math.max(currentEnter - requiredSize, minValue);
         //not checking underflow here because rehash is only called if currentEnter == maxValue
         //and maxValue >= MIN+rehashThreshold, which is >= requiredSize, so currentEnter >= MIN+requiredSize
         assert cutGen <= currentEnter;
@@ -137,7 +141,7 @@ public class ExpiringVisitedSet implements VisitedSet {
         int exits = 0;
 
         for (int i = 0; i < table.length; i++) {
-            long geni = gen[i];
+            int geni = gen[i];
             if (geni > cutGen) {
                 tempTable[count] = table[i];
 

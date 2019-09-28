@@ -40,8 +40,10 @@ public class ObjectSizer {
         bytes = 0;
         seen.clear();
 
-        while (index >= 0)
-            stack[index--].clear();
+        for (int i = 0; i < stack.length; i++)
+            stack[i].clear();
+
+        index = -1;
         currentPeeler = null;
         hasNextPeeler = false;
     }
@@ -60,7 +62,9 @@ public class ObjectSizer {
         if (!hasNextPeeler)
             return false;
 
-        stack[index + 1].clear();
+        //stack[index + 1].clear();
+        //TODO:
+        //seen.exit(currentPeeler.current(), stackExit[index]);
         hasNextPeeler = false;
         return true;
     }
@@ -94,7 +98,6 @@ public class ObjectSizer {
                 bytes = stack[index + 1].resetTo(currentType, currentObj);
                 return true;
             } else {
-                stack[index].clear();
                 ReferencePeeler peeler = currentPeeler = --index >= 0 ? stack[index] : null;
                 if (peeler != null)
                     seen.exit(peeler.current(), stackExit[index]);

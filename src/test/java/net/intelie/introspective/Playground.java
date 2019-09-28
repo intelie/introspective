@@ -10,8 +10,6 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 @Ignore
-
-
 public class Playground {
     @Test
     public void testSmallObject() {
@@ -25,28 +23,31 @@ public class Playground {
         System.out.println("Collisions: " + set.DEBUG_COLLISIONS);
         System.out.println("Rehashes: " + set.DEBUG_REHASHES);
         System.out.println("Rehashes (time): " + set.DEBUG_REHASHES_TIME / 1e9);
+        System.out.println("Hard clears: " + set.DEBUG_HARDCLEARS);
+        System.out.println("Hard clears (time): " + set.DEBUG_HARDCLEARS_TIME / 1e9);
         System.out.println("Exit misses: " + set.DEBUG_EXIT_MISS);
     }
 
 
     @Test
     public void testLargeObject() {
-        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 8);
+        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 16);
         ObjectSizer sizer = new ObjectSizer(set);
 
-        Object[] objs = IntStream.range(0, 1000).mapToObj(x -> {
+        Object[] objs = IntStream.range(0, 10000).mapToObj(x -> {
             Map test = new HashMap();
-            test.put(111 + x * 1000, Arrays.asList("aaa" + x, 222 + x * 1000));
-            test.put(333.0 + x * 1000, Collections.singletonMap("bbb" + x, 444 + x * 1000));
+            test.put(111 + x * 10000, Arrays.asList("aaa" + x, 222 + x * 10000));
+            test.put(333.0 + x * 10000, Collections.singletonMap("bbb" + x, 444 + x * 10000));
             return test;
         }).toArray(Object[]::new);
 
-        testSizer(sizer, objs, 10000);
+        testSizer(sizer, objs, 1000);
         System.out.println("Collisions: " + set.DEBUG_COLLISIONS);
         System.out.println("Rehashes: " + set.DEBUG_REHASHES);
         System.out.println("Rehashes (time): " + set.DEBUG_REHASHES_TIME / 1e9);
-        System.out.println("Exit misses: " + set.DEBUG_EXIT_MISS);
-    }
+        System.out.println("Hard clears: " + set.DEBUG_HARDCLEARS);
+        System.out.println("Hard clears (time): " + set.DEBUG_HARDCLEARS_TIME / 1e9);
+        System.out.println("Exit misses: " + set.DEBUG_EXIT_MISS);    }
 
     private void testSizer(ObjectSizer sizer, Object test, int measureCount) {
         for (int i = 0; i < measureCount / 100; i++) {
