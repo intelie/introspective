@@ -1,4 +1,4 @@
-package net.intelie.introspective;
+package net.intelie.introspective.util;
 
 import net.intelie.introspective.util.VisitedSet;
 

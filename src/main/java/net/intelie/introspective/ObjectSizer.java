@@ -63,8 +63,7 @@ public class ObjectSizer {
             return false;
 
         //stack[index + 1].clear();
-        //TODO:
-        //seen.exit(currentPeeler.current(), stackExit[index]);
+        seen.exit(currentPeeler.current(), stackExit[index]);
         hasNextPeeler = false;
         return true;
     }

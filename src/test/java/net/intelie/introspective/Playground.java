@@ -31,7 +31,7 @@ public class Playground {
 
     @Test
     public void testLargeObject() {
-        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 16);
+        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 4);
         ObjectSizer sizer = new ObjectSizer(set);
 
         Object[] objs = IntStream.range(0, 10000).mapToObj(x -> {

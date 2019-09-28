@@ -78,7 +78,7 @@ public class ExpiringVisitedSet implements VisitedSet {
                 return ~index;
             //quadratic probing
             collisions++;
-            index = (index + collisions * collisions) & mask;
+            index = (index + collisions) & mask;
         }
 
         DEBUG_COLLISIONS += collisions;
@@ -99,7 +99,7 @@ public class ExpiringVisitedSet implements VisitedSet {
                 return ~index;
             //quadratic probing
             collisions++;
-            index = (index + collisions * collisions) & mask;
+            index = (index + collisions) & mask;
         }
 
         DEBUG_COLLISIONS += collisions;
