@@ -35,13 +35,21 @@ public class ObjectPeeler implements ReferencePeeler {
 
     @Override
     public boolean moveNext() {
+        //doing this way to save field accesses that cost a lot
+        int count = this.count;
+        int it = this.it;
+        Object thisObj = this.obj;
+        ReflectionCache.Item cached = this.cached;
+
         while (it < count) {
-            Object obj = cached.value(this.obj, it++);
+            Object obj = cached.value(thisObj, it++);
             if (obj != null) {
-                current = obj;
+                this.current = obj;
+                this.it = it;
                 return true;
             }
         }
+        this.it = it;
         return false;
     }
 

@@ -5,7 +5,6 @@ import org.junit.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ExpiringVisitedSetTest {
-
     @Test
     public void testMany() {
         ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 8);
@@ -17,6 +16,26 @@ public class ExpiringVisitedSetTest {
                 assertThat(set.exit(obj, 0)).isTrue();
             }
         }
+    }
+
+    @Test
+    public void testClear() {
+        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 8);
+        Object obj = new Object();
+        set.enter(obj);
+        assertThat(set.contains(obj)).isNotNegative();
+        set.clear();
+        assertThat(set.contains(obj)).isNegative();
+    }
+
+    @Test
+    public void testForceClear() {
+        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 8, 1 << 20, 1 << 21);
+
+        for (int i = 0; i < (1 << 12) - 2; i++) {
+            assertThat(set.softClear()).isTrue();
+        }
+        assertThat(set.softClear()).isFalse();
     }
 
     @Test

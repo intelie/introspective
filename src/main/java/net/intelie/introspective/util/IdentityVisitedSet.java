@@ -17,8 +17,9 @@ public class IdentityVisitedSet implements VisitedSet {
     }
 
     @Override
-    public void softClear() {
+    public boolean softClear() {
         set.clear();
+        return false;
     }
 
     @Override

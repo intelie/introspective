@@ -33,7 +33,7 @@ public class Playground {
 
     @Test
     public void testLargeObject() {
-        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 4);
+        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 16);
         ObjectSizer sizer = new ObjectSizer(set);
 
         Object[] objs = IntStream.range(0, 10000).mapToObj(x -> {
@@ -123,7 +123,7 @@ public class Playground {
 
         long start = System.nanoTime();
         long total = 0;
-        for (int i = 0; i < 50000000; i++) {
+        for (int i = 0; i < 100000000; i++) {
             peeler.resetTo(clazz, obj);
             while (peeler.moveNext()) total++;
         }

@@ -56,15 +56,17 @@ public class ExpiringVisitedSet implements VisitedSet {
     }
 
     @Override
-    public void softClear() {
+    public boolean softClear() {
         if (maxValue > Integer.MAX_VALUE - rehashThreshold) {
             DEBUG_HARDCLEARS++;
             long DEBUG_START = System.nanoTime();
             clearGen();
             DEBUG_HARDCLEARS_TIME += System.nanoTime() - DEBUG_START;
+            return false;
         } else {
             currentEnter = currentExit = minValue = maxValue; //reset minima to latest maximum
             maxValue = minValue + rehashThreshold;  //new maximum
+            return true;
         }
     }
 

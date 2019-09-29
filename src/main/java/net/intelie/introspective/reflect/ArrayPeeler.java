@@ -29,10 +29,20 @@ public class ArrayPeeler implements ReferencePeeler {
 
     @Override
     public boolean moveNext() {
-        while (it < obj.length) {
-            if ((current = obj[it++]) != null)
+        //doing this way to save field accesses that cost a lot
+        int it = this.it;
+        Object[] obj = this.obj;
+        int count = obj.length;
+
+        while (it < count) {
+            Object newObj = obj[it++];
+            if (newObj != null) {
+                this.it = it;
+                this.current = newObj;
                 return true;
+            }
         }
+        this.it = it;
         return false;
     }
 

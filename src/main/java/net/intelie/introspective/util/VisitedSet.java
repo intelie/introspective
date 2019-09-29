@@ -3,7 +3,7 @@ package net.intelie.introspective.util;
 public interface VisitedSet {
     void clear();
 
-    void softClear();
+    boolean softClear();
 
     int enter(Object obj);
 

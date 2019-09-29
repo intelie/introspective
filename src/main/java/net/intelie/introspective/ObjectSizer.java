@@ -40,8 +40,8 @@ public class ObjectSizer {
         bytes = 0;
         seen.clear();
 
-        for (int i = 0; i < stack.length; i++)
-            stack[i].clear();
+        for (ReferencePeeler peelr : stack)
+            peelr.clear();
 
         index = -1;
         currentPeeler = null;
