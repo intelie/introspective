@@ -64,10 +64,6 @@ public class FastFieldAccessor {
         return x -> field.get(x);
     }
 
-    public long offset() {
-        return offset;
-    }
-
     private void moveToNextAccessor() {
         while (!accessors.isEmpty()) {
             try {

@@ -32,6 +32,14 @@ public class ObjectSizerTest {
     }
 
     @Test
+    public void estimateLinkedList() {
+        List<Object> test = new LinkedList<>();
+        for (int i = 0; i < 1000; i++)
+            test.add(i);
+        assertThat(estimate(test)).isEqualTo(TestSizeUtils.size(test));
+    }
+
+    @Test
     public void estimateVisitedSet() {
         ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);
         int expected = (1 << 20) + (1 << 18);
@@ -171,12 +179,16 @@ public class ObjectSizerTest {
     }
 
     private long estimate(Object obj) {
-        long size = 0;
+        long size = 0, size2 = 0;
         ObjectSizer sizer = new ObjectSizer();
         sizer.resetTo(obj);
-        while (sizer.moveNext()) {
+        while (sizer.moveNext())
             size += sizer.bytes();
-        }
+        sizer.clear();
+        sizer.resetTo(obj);
+        while (sizer.moveNext())
+            size2 += sizer.bytes();
+        assertThat(size).isEqualTo(size2);
         return size;
     }
 
