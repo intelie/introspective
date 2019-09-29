@@ -32,6 +32,13 @@ public class ObjectSizerTest {
     }
 
     @Test
+    public void estimateVisitedSet() {
+        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);
+        int expected = (1 << 20) + (1 << 18);
+        assertThat(estimate(set)).isBetween((long) (expected * 0.9), (long) (expected * 1.1));
+    }
+
+    @Test
     public void estimateLinkedHashMap() {
         Map test = new LinkedHashMap();
         test.put(111, Arrays.asList("aaa", 222));

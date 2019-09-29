@@ -30,9 +30,4 @@ public class IdentityVisitedSet implements VisitedSet {
     public boolean exit(Object obj, int hint) {
         return true;
     }
-
-    @Override
-    public int contains(Object obj) {
-        return set.containsKey(obj) ? 1 : -1;
-    }
 }

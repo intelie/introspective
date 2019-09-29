@@ -20,7 +20,7 @@ public class ObjectSizer {
     private Class<?> type;
 
     public ObjectSizer() {
-        this(new ExpiringVisitedSet(1 << 16));
+        this(new ExpiringVisitedSet(1 << 15));
     }
 
     public ObjectSizer(VisitedSet seen) {

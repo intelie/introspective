@@ -3,6 +3,7 @@ package net.intelie.introspective;
 import net.intelie.introspective.reflect.ObjectPeeler;
 import net.intelie.introspective.reflect.ReflectionCache;
 import net.intelie.introspective.util.ExpiringVisitedSet;
+import net.intelie.introspective.util.VisitedSet;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -15,9 +16,9 @@ import java.util.stream.IntStream;
 public class Playground {
     @Test
     public void testSmallObject() {
-        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 6);
+        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);
         ObjectSizer sizer = new ObjectSizer(set);
-        Map test = new LinkedHashMap();
+        Map test = new HashMap();
         test.put(111, Arrays.asList("aaa", 222));
         test.put(333.0, Collections.singletonMap("bbb", 444));
 
@@ -29,7 +30,6 @@ public class Playground {
         System.out.println("Hard clears (time): " + set.DEBUG_HARDCLEARS_TIME / 1e9);
         System.out.println("Exit misses: " + set.DEBUG_EXIT_MISS);
     }
-
 
     @Test
     public void testLargeObject() {

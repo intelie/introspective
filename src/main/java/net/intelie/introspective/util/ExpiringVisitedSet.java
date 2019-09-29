@@ -121,7 +121,6 @@ public class ExpiringVisitedSet implements VisitedSet {
         return true;
     }
 
-    @Override
     public int contains(Object obj) {
         return ~findIndex(obj);
     }
