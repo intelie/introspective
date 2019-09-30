@@ -29,9 +29,13 @@ public class ExpiringVisitedSet implements VisitedSet {
     }
 
     public ExpiringVisitedSet(int requiredSize, int rehashThreshold, int tableSize) {
-        Preconditions.checkArgument(requiredSize <= rehashThreshold, "Rehash threshold must be at least as large as required size");
-        Preconditions.checkArgument(rehashThreshold < tableSize, "Table size must be stricly greater than rehash threshold");
-        Preconditions.checkArgument(Integer.bitCount(tableSize) == 1, "Table size must be a power of two");
+        Preconditions.checkArgument(0 <= requiredSize, "Required size (%d) must be non-negative", requiredSize);
+        Preconditions.checkArgument(requiredSize <= rehashThreshold,
+                "Rehash threshold (%s) must be at least as large as required size (%s)", rehashThreshold, requiredSize);
+        Preconditions.checkArgument(rehashThreshold < tableSize,
+                "Table size (%s) must be stricly greater than rehash threshold (%s)", tableSize, rehashThreshold);
+        Preconditions.checkArgument(Integer.bitCount(tableSize) == 1, "Table size (%s) must be a power of two",
+                tableSize);
         this.requiredSize = requiredSize;
         this.rehashThreshold = rehashThreshold;
         this.table = new Object[tableSize];

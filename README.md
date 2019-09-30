@@ -2,10 +2,14 @@
 
 JVM Introspection Utilities
 
-Largely based on https://github.com/apangin/helfy.
+Initially based on https://github.com/apangin/helfy.
 
-The main ability this lib has right now is to inspect the total amount of allocated bytes 
-for any thread. But you can inspect pretty much any internal JVM object with this tool.
+This library has two main features:
+
+- Inspect the total amount of allocated bytes for any thread, with an implementation orders of magnitude faster than ThreadMXBean;
+- Estimate recursively the total amount of bytes an object holds.
+
+Also, with the tools provided here, you can inspect pretty much any internal JVM object with this tool.
 
 We tested it on Linux, in OpenJDK versions 8 to 13, but it should work well in other systems.
 No guarantee, though.

@@ -17,7 +17,7 @@ public class Playground {
     @Test
     public void testSmallObject() {
         ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);
-        ObjectSizer sizer = new ObjectSizer(set);
+        ObjectSizer sizer = new ObjectSizer(new ReflectionCache(), set);
         Map test = new HashMap();
         test.put(111, Arrays.asList("aaa", 222));
         test.put(333.0, Collections.singletonMap("bbb", 444));
@@ -34,7 +34,7 @@ public class Playground {
     @Test
     public void testLargeObject() {
         ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 16);
-        ObjectSizer sizer = new ObjectSizer(set);
+        ObjectSizer sizer = new ObjectSizer(new ReflectionCache(), set);
 
         Object[] objs = IntStream.range(0, 10000).mapToObj(x -> {
             Map test = new HashMap();

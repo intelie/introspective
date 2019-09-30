@@ -20,11 +20,11 @@ public class ObjectSizer {
     private Class<?> type;
 
     public ObjectSizer() {
-        this(new ExpiringVisitedSet(1 << 15));
+        this(new ReflectionCache(), new ExpiringVisitedSet(1 << 15));
     }
 
-    public ObjectSizer(VisitedSet seen) {
-        this.cache = new ReflectionCache();
+    public ObjectSizer(ReflectionCache cache, VisitedSet seen) {
+        this.cache = cache;
         this.seen = seen;
         this.stack = new ReferencePeeler[16];
         this.stackExit = new int[16];
@@ -62,7 +62,6 @@ public class ObjectSizer {
         if (!hasNextPeeler)
             return false;
 
-        //stack[index + 1].clear();
         seen.exit(currentPeeler.current(), stackExit[index]);
         hasNextPeeler = false;
         return true;
