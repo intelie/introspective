@@ -8,7 +8,6 @@ import java.util.Arrays;
 
 public class ObjectSizer {
     private final StringBuilder builder = new StringBuilder();
-    private final ReflectionCache cache;
     private final VisitedSet seen;
     private ReferencePeeler[] stack;
     private int[] stackExit;
@@ -24,7 +23,6 @@ public class ObjectSizer {
     }
 
     public ObjectSizer(ReflectionCache cache, VisitedSet seen) {
-        this.cache = cache;
         this.seen = seen;
         this.stack = new ReferencePeeler[seen.maxDepth() + 1];
         this.stackExit = new int[seen.maxDepth() + 1];
@@ -71,21 +69,16 @@ public class ObjectSizer {
         VisitedSet seen = this.seen;
         ReferencePeeler[] stack = this.stack;
         int index = this.index;
-        ReferencePeeler peeler;
-        if (hasNextPeeler) {
-            peeler = currentPeeler = stack[++index];
-            hasNextPeeler = false;
-        } else {
-            peeler = currentPeeler;
-        }
+        ReferencePeeler peeler = hasNextPeeler ? stack[++index] : currentPeeler;
 
-        for (; ; ) {
+        while (true) {
             if (peeler.moveNext()) {
                 Object currentObj = peeler.current();
                 int enterIndex = seen.enter(currentObj);
                 if (enterIndex < 0)
                     continue;
 
+                this.currentPeeler = peeler;
                 this.current = currentObj;
                 this.index = index;
                 Class<?> currentType = this.type = currentObj.getClass();
@@ -94,6 +87,7 @@ public class ObjectSizer {
                 long fast = JVMPrimitives.getFastPath(currentType, currentObj);
                 if (fast >= 0) {
                     this.bytes = fast;
+                    this.hasNextPeeler = false;
                     seen.exit(currentObj, enterIndex);
                     return true;
                 }
@@ -103,15 +97,11 @@ public class ObjectSizer {
                 bytes = stack[index + 1].resetTo(currentType, currentObj);
                 return true;
             } else {
-                if (--index < 0) return false; 
-                peeler = currentPeeler = stack[index];
+                if (--index < 0) return false;
+                peeler = stack[index];
                 seen.exit(peeler.current(), stackExit[index]);
             }
         }
-    }
-
-    private void checkOverflow() {
-
     }
 
     public int visitDepth() {
