@@ -8,6 +8,7 @@ public class ExpiringVisitedSetTest {
     @Test
     public void testMany() {
         ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 8);
+        assertThat(set.maxDepth()).isEqualTo(256);
         for (int j = 0; j < 1000; j++) {
             set.softClear();
             for (int i = 0; i < 16; i++) {

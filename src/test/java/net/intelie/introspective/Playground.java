@@ -3,6 +3,7 @@ package net.intelie.introspective;
 import net.intelie.introspective.reflect.ObjectPeeler;
 import net.intelie.introspective.reflect.ReflectionCache;
 import net.intelie.introspective.util.ExpiringVisitedSet;
+import net.intelie.introspective.util.IdentityVisitedSet;
 import net.intelie.introspective.util.VisitedSet;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class Playground {
 
     @Test
     public void testLargeObject() {
-        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 16);
+        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);
         ObjectSizer sizer = new ObjectSizer(new ReflectionCache(), set);
 
         Object[] objs = IntStream.range(0, 10000).mapToObj(x -> {
@@ -50,6 +51,7 @@ public class Playground {
         System.out.println("Hard clears: " + set.DEBUG_HARDCLEARS);
         System.out.println("Hard clears (time): " + set.DEBUG_HARDCLEARS_TIME / 1e9);
         System.out.println("Exit misses: " + set.DEBUG_EXIT_MISS);
+
     }
 
     private void testSizer(ObjectSizer sizer, Object test, int measureCount) {
@@ -68,7 +70,9 @@ public class Playground {
         long memEnd = ThreadResources.allocatedBytes(Thread.currentThread());
         System.out.println("Allocation: " + (memEnd - memStart));
         System.out.println("Objects: " + total);
-        System.out.println("Time: " + (System.nanoTime() - start) / 1e9);
+        long end = System.nanoTime();
+        System.out.println("Time: " + (end - start) / 1e9);
+        System.out.println("Objects/s: " + (long) (total * 1e9 / (end - start)));
     }
 
     @Test
@@ -99,12 +103,12 @@ public class Playground {
 
         System.out.println("Allocation: " + (memEnd - memStart));
         System.out.println("Time: " + (System.nanoTime() - start) / 1e9);
-        System.out.println("Collisions: " + set.DEBUG_COLLISIONS);
-        System.out.println("Rehashes: " + set.DEBUG_REHASHES);
-        System.out.println("Rehashes (time): " + set.DEBUG_REHASHES_TIME / 1e9);
-        System.out.println("Hard clears: " + set.DEBUG_HARDCLEARS);
-        System.out.println("Hard clears (time): " + set.DEBUG_HARDCLEARS_TIME / 1e9);
-        System.out.println("Exit misses: " + set.DEBUG_EXIT_MISS);
+//        System.out.println("Collisions: " + set.DEBUG_COLLISIONS);
+//        System.out.println("Rehashes: " + set.DEBUG_REHASHES);
+//        System.out.println("Rehashes (time): " + set.DEBUG_REHASHES_TIME / 1e9);
+//        System.out.println("Hard clears: " + set.DEBUG_HARDCLEARS);
+//        System.out.println("Hard clears (time): " + set.DEBUG_HARDCLEARS_TIME / 1e9);
+//        System.out.println("Exit misses: " + set.DEBUG_EXIT_MISS);
     }
 
     @Test

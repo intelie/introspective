@@ -26,8 +26,8 @@ public class ObjectSizer {
     public ObjectSizer(ReflectionCache cache, VisitedSet seen) {
         this.cache = cache;
         this.seen = seen;
-        this.stack = new ReferencePeeler[16];
-        this.stackExit = new int[16];
+        this.stack = new ReferencePeeler[seen.maxDepth() + 1];
+        this.stackExit = new int[seen.maxDepth() + 1];
         stack[0] = new ConstantDummyPeeler();
         for (int i = 1; i < stack.length; i++) {
             stack[i] = new GenericPeeler(cache);
@@ -68,50 +68,50 @@ public class ObjectSizer {
     }
 
     public boolean moveNext() {
+        VisitedSet seen = this.seen;
+        ReferencePeeler[] stack = this.stack;
+        int index = this.index;
+        ReferencePeeler peeler;
         if (hasNextPeeler) {
-            currentPeeler = stack[++index];
+            peeler = currentPeeler = stack[++index];
             hasNextPeeler = false;
+        } else {
+            peeler = currentPeeler;
         }
 
-        while (currentPeeler != null) {
-            if (currentPeeler.moveNext()) {
-                Object currentObj = this.current = currentPeeler.current();
+        for (; ; ) {
+            if (peeler.moveNext()) {
+                Object currentObj = peeler.current();
                 int enterIndex = seen.enter(currentObj);
                 if (enterIndex < 0)
                     continue;
 
+                this.current = currentObj;
+                this.index = index;
                 Class<?> currentType = this.type = currentObj.getClass();
 
                 //the value is a boxed primitive
                 long fast = JVMPrimitives.getFastPath(currentType, currentObj);
                 if (fast >= 0) {
-                    bytes = fast;
+                    this.bytes = fast;
                     seen.exit(currentObj, enterIndex);
                     return true;
                 }
 
                 stackExit[index] = enterIndex;
-                checkOverflow();
                 hasNextPeeler = true;
                 bytes = stack[index + 1].resetTo(currentType, currentObj);
                 return true;
             } else {
-                ReferencePeeler peeler = currentPeeler = --index >= 0 ? stack[index] : null;
-                if (peeler != null)
-                    seen.exit(peeler.current(), stackExit[index]);
+                if (--index < 0) return false; 
+                peeler = currentPeeler = stack[index];
+                seen.exit(peeler.current(), stackExit[index]);
             }
         }
-        return false;
     }
 
     private void checkOverflow() {
-        if (index + 1 >= stack.length) {
-            int old = stack.length;
-            stack = Arrays.copyOf(stack, stack.length * 2);
-            stackExit = Arrays.copyOf(stackExit, stackExit.length * 2);
-            for (int i = old; i < stack.length; i++)
-                stack[i] = new GenericPeeler(cache);
-        }
+
     }
 
     public int visitDepth() {

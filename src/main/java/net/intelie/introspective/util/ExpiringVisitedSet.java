@@ -48,6 +48,11 @@ public class ExpiringVisitedSet implements VisitedSet {
     }
 
     @Override
+    public int maxDepth() {
+        return requiredSize;
+    }
+
+    @Override
     public void clear() {
         clearGen();
         Arrays.fill(tempTable, null);

@@ -6,8 +6,11 @@ import java.util.IdentityHashMap;
 
 public class IdentityVisitedSet implements VisitedSet {
     private final IdentityHashMap<Object, Object> set;
+    private final int maxDepth;
+    private int depth = 0;
 
-    public IdentityVisitedSet() {
+    public IdentityVisitedSet(int maxDepth) {
+        this.maxDepth = maxDepth;
         this.set = new IdentityHashMap<>();
     }
 
@@ -23,12 +26,21 @@ public class IdentityVisitedSet implements VisitedSet {
     }
 
     @Override
+    public int maxDepth() {
+        return maxDepth;
+    }
+
+    @Override
     public int enter(Object obj) {
+        if (depth >= maxDepth)
+            return -1;
+        depth++;
         return set.put(obj, true) == null ? 1 : -1;
     }
 
     @Override
     public boolean exit(Object obj, int hint) {
+        depth--;
         return true;
     }
 }
