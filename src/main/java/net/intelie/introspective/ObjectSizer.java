@@ -50,10 +50,8 @@ public class ObjectSizer {
         seen.softClear();
         index = -1;
         currentPeeler = null;
-        if (obj != null) {
-            hasNextPeeler = true;
-            stack[0].resetTo(null, obj);
-        }
+        hasNextPeeler = true;
+        stack[0].resetTo(null, obj);
     }
 
     public boolean skipChildren() {

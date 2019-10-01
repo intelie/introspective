@@ -32,6 +32,11 @@ public class ObjectSizerTest {
     }
 
     @Test
+    public void estimateNull() {
+        assertThat(estimate(null)).isEqualTo(0);
+    }
+
+    @Test
     public void estimateLinkedList() {
         List<Object> test = new LinkedList<>();
         for (int i = 0; i < 1000; i++)
