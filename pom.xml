@@ -6,7 +6,7 @@
 
     <groupId>net.intelie.introspective</groupId>
     <artifactId>introspective</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2</version>
 
     <name>Introspective</name>
     <description>JVM Introspection Utilities</description>
@@ -81,6 +81,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M3</version>
                 <configuration>
                     <useSystemClassLoader>false</useSystemClassLoader>
                 </configuration>
