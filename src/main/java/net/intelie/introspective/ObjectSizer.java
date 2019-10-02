@@ -4,13 +4,11 @@ import net.intelie.introspective.reflect.*;
 import net.intelie.introspective.util.ExpiringVisitedSet;
 import net.intelie.introspective.util.VisitedSet;
 
-import java.util.Arrays;
-
 public class ObjectSizer {
     private final StringBuilder builder = new StringBuilder();
     private final VisitedSet seen;
-    private ReferencePeeler[] stack;
-    private int[] stackExit;
+    private final ReferencePeeler[] stack;
+    private final int[] stackExit;
     private int index = 0;
     private Object current;
     private ReferencePeeler currentPeeler;
