@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class IdentityVisitedSetTest {
     @Test
     public void normalMethods() {
-        IdentityVisitedSet set = new IdentityVisitedSet(10);
+        IdentityVisitedSet set = new IdentityVisitedSet();
         Object o1 = new Object();
         Object o2 = new Object();
 
@@ -29,18 +29,5 @@ public class IdentityVisitedSetTest {
 
         assertThat(set.enter(o1)).isEqualTo(1);
         assertThat(set.enter(o2)).isEqualTo(1);
-    }
-
-    @Test
-    public void testMaxDepth() {
-        IdentityVisitedSet set = new IdentityVisitedSet(10);
-        for (int i = 0; i < 10; i++) {
-            assertThat(set.enter(i)).isEqualTo(1);
-        }
-        assertThat(set.enter(10)).isEqualTo(-1);
-
-        assertThat(set.exit(9, 0)).isTrue();
-
-        assertThat(set.enter(10)).isEqualTo(1);
     }
 }

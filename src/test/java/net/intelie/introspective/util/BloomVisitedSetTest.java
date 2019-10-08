@@ -27,8 +27,8 @@ public class BloomVisitedSetTest {
         }
 
         for (int i = 0; i < 32; i++) {
-            assertThat(count[i]).isBetween(tests * 9 / 20, tests * 11 / 20);
-            assertThat(count2[i]).isBetween(tests * 9 / 40, tests * 11 / 40);
+            assertThat(count[i]).isBetween(tests * 49 / 100, tests * 51 / 100);
+            assertThat(count2[i]).isBetween(tests * 24 / 100, tests * 26 / 100);
         }
     }
 
