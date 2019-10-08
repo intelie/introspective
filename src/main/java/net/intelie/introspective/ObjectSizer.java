@@ -9,6 +9,7 @@ public class ObjectSizer {
     private final VisitedSet seen;
     private final ReferencePeeler[] stack;
     private final int[] stackExit;
+    private final int maxDepth;
     private int index = 0;
     private Object current;
     private ReferencePeeler currentPeeler;
@@ -17,13 +18,14 @@ public class ObjectSizer {
     private Class<?> type;
 
     public ObjectSizer() {
-        this(new ReflectionCache(), new ExpiringVisitedSet(1 << 15));
+        this(new ReflectionCache(), new ExpiringVisitedSet(1 << 15), 1 << 16);
     }
 
-    public ObjectSizer(ReflectionCache cache, VisitedSet seen) {
+    public ObjectSizer(ReflectionCache cache, VisitedSet seen, int maxDepth) {
         this.seen = seen;
-        this.stack = new ReferencePeeler[seen.maxDepth() + 1];
-        this.stackExit = new int[seen.maxDepth() + 1];
+        this.stack = new ReferencePeeler[maxDepth];
+        this.stackExit = new int[maxDepth];
+        this.maxDepth = maxDepth;
         stack[0] = new ConstantDummyPeeler();
         for (int i = 1; i < stack.length; i++) {
             stack[i] = new GenericPeeler(cache);
@@ -88,9 +90,13 @@ public class ObjectSizer {
                     return true;
                 }
 
-                stackExit[index] = enterIndex;
-                hasNextPeeler = true;
-                bytes = stack[index + 1].resetTo(currentType, currentObj);
+                if (index + 1 < maxDepth) {
+                    stackExit[index] = enterIndex;
+                    hasNextPeeler = true;
+                    bytes = stack[index + 1].resetTo(currentType, currentObj);
+                } else {
+                    seen.exit(currentObj, enterIndex);
+                }
                 return true;
             } else {
                 if (--index < 0) return false;

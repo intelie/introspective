@@ -8,6 +8,4 @@ public interface VisitedSet {
     int enter(Object obj);
 
     boolean exit(Object obj, int hint);
-
-    int maxDepth();
 }

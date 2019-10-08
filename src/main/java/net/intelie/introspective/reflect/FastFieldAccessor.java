@@ -16,15 +16,17 @@ public class FastFieldAccessor {
     private final Deque<Supplier<Accessor>> accessors;
     private final String name;
     private final long offset;
+    private final int declarationOrder;
     private Accessor currentAccessor;
 
-    public FastFieldAccessor(Field field) {
-        this(field, true);
+    public FastFieldAccessor(int declarationOrder, Field field) {
+        this(declarationOrder, field, true);
     }
 
-    public FastFieldAccessor(Field field, boolean allowUnsafe) {
+    public FastFieldAccessor(int declarationOrder, Field field, boolean allowUnsafe) {
         this.name = field.getName();
         this.accessors = new ArrayDeque<>();
+        this.declarationOrder = declarationOrder;
 
         if (allowUnsafe && U != null) {
             offset = U.objectFieldOffset(field);
@@ -62,6 +64,14 @@ public class FastFieldAccessor {
     private static Accessor reflectionAccessor(Field field) {
         field.setAccessible(true);
         return x -> field.get(x);
+    }
+
+    public long offset() {
+        return offset;
+    }
+
+    public int declarationOrder() {
+        return declarationOrder;
     }
 
     private void moveToNextAccessor() {

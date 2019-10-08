@@ -2,6 +2,7 @@ package net.intelie.introspective;
 
 import net.intelie.introspective.reflect.ObjectPeeler;
 import net.intelie.introspective.reflect.ReflectionCache;
+import net.intelie.introspective.util.BloomVisitedSet;
 import net.intelie.introspective.util.ExpiringVisitedSet;
 import net.intelie.introspective.util.IdentityVisitedSet;
 import net.intelie.introspective.util.VisitedSet;
@@ -18,7 +19,7 @@ public class Playground {
     @Test
     public void testSmallObject() {
         ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);
-        ObjectSizer sizer = new ObjectSizer(new ReflectionCache(), set);
+        ObjectSizer sizer = new ObjectSizer(new ReflectionCache(), set, 1 << 15);
         Map test = new HashMap();
         test.put(111, Arrays.asList("aaa", 222));
         test.put(333.0, Collections.singletonMap("bbb", 444));
@@ -35,7 +36,7 @@ public class Playground {
     @Test
     public void testLargeObject() {
         ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);
-        ObjectSizer sizer = new ObjectSizer(new ReflectionCache(), set);
+        ObjectSizer sizer = new ObjectSizer(new ReflectionCache(), new BloomVisitedSet(1 << 20, 2), 1 << 15);
 
         Object[] objs = IntStream.range(0, 10000).mapToObj(x -> {
             Map test = new HashMap();

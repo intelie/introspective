@@ -26,11 +26,6 @@ public class IdentityVisitedSet implements VisitedSet {
     }
 
     @Override
-    public int maxDepth() {
-        return maxDepth;
-    }
-
-    @Override
     public int enter(Object obj) {
         if (depth >= maxDepth)
             return -1;

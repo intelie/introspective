@@ -38,11 +38,13 @@ public class FastFieldAccessorTest {
 
     private void assertAccessor(Field field, Object expectedValue) {
         TestClass test = new TestClass();
-        FastFieldAccessor accessor = new FastFieldAccessor(field);
+        FastFieldAccessor accessor = new FastFieldAccessor(42, field);
         assertThat(accessor.get(test)).isEqualTo(expectedValue);
         assertThat(accessor.name()).isEqualTo(field.getName());
+        assertThat(accessor.declarationOrder()).isEqualTo(42);
+        assertThat(accessor.offset()).isGreaterThan(0);
 
-        FastFieldAccessor accessor2 = new FastFieldAccessor(field, false);
+        FastFieldAccessor accessor2 = new FastFieldAccessor(0, field, false);
         assertThat(accessor2.get(test)).isEqualTo(expectedValue);
         assertThat(accessor2.name()).isEqualTo(field.getName());
     }
