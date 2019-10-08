@@ -8,12 +8,12 @@ public class BloomVisitedSet implements VisitedSet {
     private final int mask;
 
     public BloomVisitedSet(int m, int k) {
-        this.table = new long[m >> 6];
+        this.table = new long[m >>> 6];
         this.mask = (table.length - 1) << 6;
         this.k = k;
     }
 
-    private static int mix(int h) {
+    public static int mix(int h) {
         h ^= h >>> 16;
         h *= 0x85ebca6b;
         h ^= h >>> 13;
@@ -43,9 +43,9 @@ public class BloomVisitedSet implements VisitedSet {
         int answer = -1;
 
         for (int i = 0; i < k; i++) {
-            h = mix(h);
-            int index = (h & mask) >> 6;
-            int lowermask = 1 << (h & 63);
+            int h2 = mix(h + i);
+            int index = (h2 & mask) >>> 6;
+            int lowermask = 1 << (h2 & 63);
             long value = table[index];
             if ((value & lowermask) == 0)
                 answer = 1;

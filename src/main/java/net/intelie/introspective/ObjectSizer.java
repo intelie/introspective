@@ -18,7 +18,7 @@ public class ObjectSizer {
     private Class<?> type;
 
     public ObjectSizer() {
-        this(new ReflectionCache(), new ExpiringVisitedSet(1 << 15), 1 << 16);
+        this(new ReflectionCache(), new ExpiringVisitedSet(1 << 15), 1 << 15);
     }
 
     public ObjectSizer(ReflectionCache cache, VisitedSet seen, int maxDepth) {
