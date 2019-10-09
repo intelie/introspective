@@ -43,15 +43,19 @@ public class BloomObjectSizerTest {
 
     @Test
     public void estimateLinkedListOverMaxDepth() {
-        List<Object> test = new LinkedList<>();
-        for (int i = 0; i < 1000; i++)
-            test.add(i);
-
         BloomObjectSizer sizer = new BloomObjectSizer(new ReflectionCache(), 1 << 20, 1, 200);
-        sizer.visit(test);
+        for (int k = 0; k < 10; k++) {
+            List<Object> test = new LinkedList<>();
+            for (int i = 0; i < 1000; i++)
+                test.add(i);
 
-        assertThat(sizer.bytes()).isLessThan(TestSizeUtils.size(test));
-        assertThat(sizer.count()).isEqualTo(797);
+            sizer.clear();
+            sizer.visit(test);
+
+            assertThat(sizer.bytes()).isLessThan(TestSizeUtils.size(test));
+            assertThat(sizer.count()).isEqualTo(797);
+
+        }
     }
 
     @Test
