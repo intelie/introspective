@@ -1,8 +1,11 @@
 package net.intelie.introspective.util;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.BitSet;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,11 +36,35 @@ public class BloomVisitedSetTest {
     }
 
     @Test
+    @Ignore
+    public void testError() {
+        int total = 100000;
+        double[][] error = new double[100][10];
+        for (int i = 1; i <= 10; i++) {
+            BloomVisitedSet set = new BloomVisitedSet(1 << 20, i);
+            int failures = 0;
+            for (int j = 1; j <= total; j++) {
+                Object obj = new Object();
+                if (set.enter(obj) < 0)
+                    failures++;
+                assertThat(set.enter(obj)).isLessThan(0);
+                set.exit(obj, 0);
+
+                if (j % 1000 == 0)
+                    error[j / 1000 - 1][i - 1] = failures / (double) j;
+            }
+        }
+        for (int j = 0; j < 100; j++) {
+            System.out.println(Arrays.stream(error[j]).mapToObj(String::valueOf).collect(Collectors.joining("\t")));
+        }
+    }
+
+    @Test
     public void testMany() {
-        BloomVisitedSet set = new BloomVisitedSet(1 << 20, 3);
-        int failures = 0;
+        BloomVisitedSet set = new BloomVisitedSet(1 << 20, 2);
         int total = 1 << 16;
         for (int i = 0; i < 10; i++) {
+            int failures = 0;
             for (int j = 0; j < total; j++) {
                 Object obj = new Object();
                 if (set.enter(obj) < 0)
@@ -45,7 +72,8 @@ public class BloomVisitedSetTest {
                 assertThat(set.enter(obj)).isLessThan(0);
                 set.exit(obj, 0);
             }
-            assertThat(failures / (double) total).isLessThan(1);
+            System.out.println(failures / (double) total);
+            assertThat(failures / (double) total).isLessThan(0.02);
             assertThat(set.softClear()).isFalse();
         }
     }

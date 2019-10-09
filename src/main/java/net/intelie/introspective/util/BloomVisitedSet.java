@@ -4,11 +4,17 @@ import java.util.Arrays;
 
 public class BloomVisitedSet implements VisitedSet {
     private final long[] table;
+    private final int seed;
     private final int k;
     private final int mask;
 
     public BloomVisitedSet(int m, int k) {
+        this(m, k, 0);
+    }
+
+    public BloomVisitedSet(int m, int k, int seed) {
         this.table = new long[m >>> 6];
+        this.seed = mix(seed);
         this.mask = (table.length - 1) << 6;
         this.k = k;
     }
@@ -43,7 +49,7 @@ public class BloomVisitedSet implements VisitedSet {
         int answer = -1;
 
         for (int i = 0; i < k; i++) {
-            int h2 = mix(h + i);
+            int h2 = mix(h + i + seed);
             int index = (h2 & mask) >>> 6;
             int lowermask = 1 << (h2 & 63);
             long value = table[index];

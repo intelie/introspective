@@ -17,6 +17,7 @@ public class ReflectionCacheTest {
     @Test
     public void testCaching() {
         ReflectionCache cache = new ReflectionCache();
+        cache.clear();
         ReflectionCache.Item item = cache.get(TestClass.class);
 
         assertThat(JVMPrimitives.align(item.size())).isEqualTo(alternativeSizing1(TestClass.class));

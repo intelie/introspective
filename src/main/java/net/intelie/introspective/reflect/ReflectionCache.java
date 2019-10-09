@@ -18,6 +18,10 @@ public class ReflectionCache {
         this.cache = new HashMap<>(); //better performance than IdentityHashMap in this case
     }
 
+    public void clear() {
+        cache.clear();
+    }
+
     public Item get(Class<?> clazz) {
         Item item = cache.get(clazz);
         if (item == null)

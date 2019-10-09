@@ -6,6 +6,7 @@ import net.intelie.introspective.util.VisitedSet;
 
 public class ObjectSizer {
     private final StringBuilder builder = new StringBuilder();
+    private final ReflectionCache cache;
     private final VisitedSet seen;
     private final ReferencePeeler[] stack;
     private final int[] stackExit;
@@ -22,6 +23,7 @@ public class ObjectSizer {
     }
 
     public ObjectSizer(ReflectionCache cache, VisitedSet seen, int maxDepth) {
+        this.cache = cache;
         this.seen = seen;
         this.stack = new ReferencePeeler[maxDepth];
         this.stackExit = new int[maxDepth];
@@ -37,6 +39,7 @@ public class ObjectSizer {
         type = null;
         bytes = 0;
         seen.clear();
+        cache.clear();
 
         for (ReferencePeeler peelr : stack)
             peelr.clear();
@@ -48,6 +51,10 @@ public class ObjectSizer {
 
     public void resetTo(Object obj) {
         seen.softClear();
+        set(obj);
+    }
+
+    public void set(Object obj) {
         index = -1;
         currentPeeler = null;
         hasNextPeeler = true;
@@ -90,10 +97,10 @@ public class ObjectSizer {
                     return true;
                 }
 
-                if (index + 1 < maxDepth) {
+                bytes = stack[index + 1].resetTo(currentType, currentObj);
+                if (index + 2 < maxDepth) {
                     stackExit[index] = enterIndex;
                     hasNextPeeler = true;
-                    bytes = stack[index + 1].resetTo(currentType, currentObj);
                 } else {
                     seen.exit(currentObj, enterIndex);
                 }

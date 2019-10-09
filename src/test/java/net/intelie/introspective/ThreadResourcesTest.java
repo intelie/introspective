@@ -28,6 +28,8 @@ public class ThreadResourcesTest {
 
     @Test
     public void testEnabled() {
+        for (int i = 0; i < 100; i++)
+            diff();
         for (int i = 0; i < 1000; i++) {
             assertThat(diff()).isZero();
         }

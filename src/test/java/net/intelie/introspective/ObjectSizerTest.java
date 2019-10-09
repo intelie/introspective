@@ -1,16 +1,17 @@
 package net.intelie.introspective;
 
+import net.intelie.introspective.reflect.ReflectionCache;
 import net.intelie.introspective.reflect.StringFastPath;
 import net.intelie.introspective.reflect.TestSizeUtils;
+import net.intelie.introspective.util.BloomVisitedSet;
 import net.intelie.introspective.util.ExpiringVisitedSet;
-import org.junit.Ignore;
+import net.intelie.introspective.util.IdentityVisitedSet;
 import org.junit.Test;
 import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.vm.LightVM;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,6 +46,24 @@ public class ObjectSizerTest {
     }
 
     @Test
+    public void estimateLinkedListOverMaxDepth() {
+        List<Object> test = new LinkedList<>();
+        for (int i = 0; i < 1000; i++)
+            test.add(i);
+
+        long size = 0, count = 0;
+        ObjectSizer sizer = new ObjectSizer(new ReflectionCache(), new IdentityVisitedSet(), 200);
+        sizer.resetTo(test);
+        while (sizer.moveNext()) {
+            size += sizer.bytes();
+            count++;
+        }
+
+        assertThat(size).isLessThan(TestSizeUtils.size(test));
+        assertThat(count).isEqualTo(791);
+    }
+
+    @Test
     public void estimateVisitedSet() {
         ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);
         int expected = (1 << 20) + (1 << 18);
@@ -72,6 +91,13 @@ public class ObjectSizerTest {
 
     @Test
     public void fullTest() throws ClassNotFoundException {
+        fullTestWith(new ObjectSizer());
+        fullTestWith(new ObjectSizer(new ReflectionCache(), new ExpiringVisitedSet(1 << 15), 1 << 15));
+        fullTestWith(new ObjectSizer(new ReflectionCache(), new BloomVisitedSet(1 << 20, 2), 1 << 15));
+        fullTestWith(new ObjectSizer(new ReflectionCache(), new IdentityVisitedSet(), 1 << 15));
+    }
+
+    private void fullTestWith(ObjectSizer sizer) throws ClassNotFoundException {
         Map test = new LinkedHashMap();
         Object value1 = Arrays.asList("aaa", 222);
         Object value2 = Collections.singletonMap("bbb", 444);
@@ -80,7 +106,6 @@ public class ObjectSizerTest {
 
         TestClass obj = new TestClass(test);
 
-        ObjectSizer sizer = new ObjectSizer();
         sizer.resetTo(obj);
 
         assertIteratorSame(sizer, obj, 0, "");
