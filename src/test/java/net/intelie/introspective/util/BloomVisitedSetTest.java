@@ -72,7 +72,7 @@ public class BloomVisitedSetTest {
                 assertThat(set.enter(obj)).isLessThan(0);
                 set.exit(obj, 0);
             }
-            System.out.println(failures / (double) total);
+            //System.out.println(failures / (double) total);
             assertThat(failures / (double) total).isLessThan(0.02);
             assertThat(set.softClear()).isFalse();
         }

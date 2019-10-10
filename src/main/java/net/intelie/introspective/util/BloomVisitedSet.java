@@ -13,6 +13,7 @@ public class BloomVisitedSet implements VisitedSet {
     }
 
     public BloomVisitedSet(int m, int k, int seed) {
+        Preconditions.checkArgument(Integer.bitCount(m) == 1, "Table size (%s) must be a power of two", m);
         this.table = new long[m >>> 6];
         this.seed = mix(seed);
         this.mask = (table.length - 1) << 6;

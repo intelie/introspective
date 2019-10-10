@@ -25,6 +25,12 @@ public class BloomObjectSizer {
         this.queue = new ArrayDeque<>(maxWidth);
     }
 
+    public void softClear() {
+        seen.softClear();
+        count = 0;
+        bytes = 0;
+    }
+
     public void clear() {
         seen.clear();
         peeler.clear();
@@ -42,14 +48,18 @@ public class BloomObjectSizer {
     }
 
     public void visit(Object obj) {
+        ArrayDeque<Object> queue = this.queue;
+        GenericPeeler peeler = this.peeler;
+        VisitedSet seen = this.seen;
+        ObjectSizer dfs = this.dfs;
+        int maxWidth = this.maxWidth;
+        long count = 0;
+        long bytes = 0;
+
+
         if (obj != null)
             queue.add(obj);
 
-        GenericPeeler peeler = this.peeler;
-        VisitedSet seen = this.seen;
-
-        long count = 0;
-        long bytes = 0;
 
         //using a BFS first to give objects higher in the tree a higher change
         //of not being pruned

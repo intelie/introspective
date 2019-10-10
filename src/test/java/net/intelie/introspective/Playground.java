@@ -31,19 +31,12 @@ public class Playground {
 
     @Test
     public void testSmallObjectBfs() {
-        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);
         BloomObjectSizer sizer = new BloomObjectSizer(new ReflectionCache(), 1 << 10, 1 << 15, 1 << 15);
         Map test = new HashMap();
         test.put(111, Arrays.asList("aaa", 222));
         test.put(333.0, Collections.singletonMap("bbb", 444));
 
         testBfsSizer(sizer, test, 10000000);
-        System.out.println("Collisions: " + set.DEBUG_COLLISIONS);
-        System.out.println("Rehashes: " + set.DEBUG_REHASHES);
-        System.out.println("Rehashes (time): " + set.DEBUG_REHASHES_TIME / 1e9);
-        System.out.println("Hard clears: " + set.DEBUG_HARDCLEARS);
-        System.out.println("Hard clears (time): " + set.DEBUG_HARDCLEARS_TIME / 1e9);
-        System.out.println("Exit misses: " + set.DEBUG_EXIT_MISS);
     }
 
     @Test
@@ -70,7 +63,6 @@ public class Playground {
 
     @Test
     public void testLargeObjectBfs() {
-        ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 16);
         BloomObjectSizer sizer = new BloomObjectSizer(new ReflectionCache(), 1 << 20, 1 << 15, 1 << 15);
 
         Object[] objs = IntStream.range(0, 10000).mapToObj(x -> {
@@ -81,12 +73,6 @@ public class Playground {
         }).toArray(Object[]::new);
 
         testBfsSizer(sizer, objs, 1000);
-        System.out.println("Collisions: " + set.DEBUG_COLLISIONS);
-        System.out.println("Rehashes: " + set.DEBUG_REHASHES);
-        System.out.println("Rehashes (time): " + set.DEBUG_REHASHES_TIME / 1e9);
-        System.out.println("Hard clears: " + set.DEBUG_HARDCLEARS);
-        System.out.println("Hard clears (time): " + set.DEBUG_HARDCLEARS_TIME / 1e9);
-        System.out.println("Exit misses: " + set.DEBUG_EXIT_MISS);
 
     }
 
@@ -113,6 +99,7 @@ public class Playground {
 
     private void testBfsSizer(BloomObjectSizer sizer, Object test, int measureCount) {
         for (int i = 0; i < measureCount / 100; i++) {
+            sizer.softClear();
             sizer.visit(test);
         }
 
@@ -120,7 +107,7 @@ public class Playground {
         long memStart = ThreadResources.allocatedBytes(Thread.currentThread());
         long total = 0;
         for (int i = 0; i < measureCount; i++) {
-            sizer.clear();
+            sizer.softClear();
             sizer.visit(test);
             total += sizer.count();
         }

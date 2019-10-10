@@ -39,7 +39,6 @@ public class ObjectSizer {
         type = null;
         bytes = 0;
         seen.clear();
-        cache.clear();
 
         for (ReferencePeeler peelr : stack)
             peelr.clear();
@@ -88,7 +87,7 @@ public class ObjectSizer {
                 this.index = index;
                 Class<?> currentType = this.type = currentObj.getClass();
 
-                //the value is a boxed primitive
+                //fast path: the value is a boxed primitive
                 long fast = JVMPrimitives.getFastPath(currentType, currentObj);
                 if (fast >= 0) {
                     this.bytes = fast;

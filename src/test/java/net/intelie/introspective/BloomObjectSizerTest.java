@@ -49,7 +49,7 @@ public class BloomObjectSizerTest {
             for (int i = 0; i < 1000; i++)
                 test.add(i);
 
-            sizer.clear();
+            sizer.softClear();
             sizer.visit(test);
 
             assertThat(sizer.bytes()).isLessThan(TestSizeUtils.size(test));
@@ -86,6 +86,7 @@ public class BloomObjectSizerTest {
 
     private long estimate(Object obj) {
         BloomObjectSizer sizer = new BloomObjectSizer(new ReflectionCache(), 1 << 20, 1000, 1000);
+        sizer.clear();
         sizer.visit(obj);
         return sizer.bytes();
     }
