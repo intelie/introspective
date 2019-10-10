@@ -30,9 +30,12 @@ public class ThreadResourcesTest {
     public void testEnabled() {
         for (int i = 0; i < 1000; i++)
             diff();
+
+        long total = 0;
         for (int i = 0; i < 1000; i++) {
-            assertThat(diff()).isZero();
+            total += diff();
         }
+        assertThat(total / 1000).isZero();
     }
 
     @Test
