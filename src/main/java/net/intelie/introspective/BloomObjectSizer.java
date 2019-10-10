@@ -13,7 +13,7 @@ public class BloomObjectSizer {
     private final int maxWidth;
     private final ObjectSizer dfs;
     private final GenericPeeler peeler;
-    private final ArrayDeque<Object> Q;
+    private final ArrayDeque<Object> queue;
     private long count = 0;
     private long bytes = 0;
 
@@ -22,7 +22,7 @@ public class BloomObjectSizer {
         this.maxWidth = maxWidth;
         this.dfs = new ObjectSizer(cache, seen, maxDepth);
         this.peeler = new GenericPeeler(cache);
-        this.Q = new ArrayDeque<>(maxWidth);
+        this.queue = new ArrayDeque<>(maxWidth);
     }
 
     public void clear() {
@@ -43,7 +43,7 @@ public class BloomObjectSizer {
 
     public void visit(Object obj) {
         if (obj != null)
-            Q.add(obj);
+            queue.add(obj);
 
         GenericPeeler peeler = this.peeler;
         VisitedSet seen = this.seen;
@@ -51,11 +51,11 @@ public class BloomObjectSizer {
         long count = 0;
         long bytes = 0;
 
-        //using a DFS first to give objects higher in the tree a higher change
+        //using a BFS first to give objects higher in the tree a higher change
         //of not being pruned
-        while (!Q.isEmpty()) {
+        while (!queue.isEmpty()) {
             count++;
-            Object currentObj = Q.pollFirst();
+            Object currentObj = queue.pollFirst();
             Class<?> currentType = currentObj.getClass();
 
             //the value is a boxed primitive
@@ -69,9 +69,9 @@ public class BloomObjectSizer {
             while (peeler.moveNext()) {
                 Object next = peeler.current();
 
-                if (Q.size() < maxWidth) {
+                if (queue.size() < maxWidth) {
                     if (seen.enter(next) < 0) continue;
-                    Q.add(next);
+                    queue.add(next);
                 } else {
                     //fallback to DFS
                     dfs.set(next);
