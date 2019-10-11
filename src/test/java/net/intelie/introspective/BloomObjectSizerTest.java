@@ -1,8 +1,10 @@
 package net.intelie.introspective;
 
+import net.intelie.introspective.reflect.GenericPeeler;
 import net.intelie.introspective.reflect.ReflectionCache;
 import net.intelie.introspective.reflect.StringFastPath;
 import net.intelie.introspective.reflect.TestSizeUtils;
+import net.intelie.introspective.util.BloomVisitedSet;
 import net.intelie.introspective.util.ExpiringVisitedSet;
 import net.intelie.introspective.util.IdentityVisitedSet;
 import org.junit.Test;
@@ -17,6 +19,21 @@ public class BloomObjectSizerTest {
         Map test = Collections.singletonMap("abc", 123);
 
         assertThat(estimate(test)).isEqualTo(TestSizeUtils.size(test));
+    }
+
+    @Test
+    public void estimateSizerSize() {
+
+        ReflectionCache cache = new ReflectionCache(f -> !f.getType().equals(ReflectionCache.class));
+
+        BloomObjectSizer sizer = new BloomObjectSizer(
+                cache, //ignore cache itself
+                1 << 20,
+                (1 << 16) - 1, //adding -1 because of https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8164793
+                1 << 10
+        );
+        int expected = (1 << 20) / 8 + (1 << 16) * 4 + (1 << 10) * 96;
+        assertThat(realEstimate(cache, sizer)).isBetween((long) (expected * 0.9), (long) (expected * 1.1));
     }
 
     @Test
@@ -89,5 +106,15 @@ public class BloomObjectSizerTest {
         sizer.clear();
         sizer.visit(obj);
         return sizer.bytes();
+    }
+
+    private long realEstimate(ReflectionCache cache, Object obj) {
+        ObjectSizer real = new ObjectSizer(cache, new IdentityVisitedSet(), 1 << 15);
+        real.resetTo(obj);
+        long total = 0;
+        while (real.moveNext()) {
+            total += real.bytes();
+        }
+        return total;
     }
 }
