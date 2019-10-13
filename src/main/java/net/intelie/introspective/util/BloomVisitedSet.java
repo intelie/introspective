@@ -52,11 +52,12 @@ public class BloomVisitedSet implements VisitedSet {
         for (int i = 0; i < k; i++) {
             int h2 = mix(h + i + seed);
             int index = (h2 & mask) >>> 6;
-            int lowermask = 1 << (h2 & 63);
+            long lowermask = 1L << (h2 & 63);
             long value = table[index];
-            if ((value & lowermask) == 0)
+            if ((value & lowermask) == 0) {
                 answer = 1;
-            table[index] = (value | lowermask);
+                table[index] = value | lowermask;
+            }
         }
         return answer;
     }

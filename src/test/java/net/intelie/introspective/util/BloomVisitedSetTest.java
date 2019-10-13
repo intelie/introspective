@@ -38,8 +38,8 @@ public class BloomVisitedSetTest {
     @Test
     @Ignore
     public void testError() {
-        int total = 100000;
-        double[][] error = new double[100][10];
+        int total = 500000;
+        double[][] error = new double[256][10];
         for (int i = 1; i <= 10; i++) {
             BloomVisitedSet set = new BloomVisitedSet(1 << 20, i);
             int failures = 0;
@@ -50,8 +50,8 @@ public class BloomVisitedSetTest {
                 assertThat(set.enter(obj)).isLessThan(0);
                 set.exit(obj, 0);
 
-                if (j % 1000 == 0)
-                    error[j / 1000 - 1][i - 1] = failures / (double) j;
+                if (j % (total / 100) == 0)
+                    error[j / (total / 100) - 1][i - 1] = failures / (double) j;
             }
         }
         for (int j = 0; j < 100; j++) {
