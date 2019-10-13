@@ -25,7 +25,7 @@ dependency to your `pom.xml` file:
 <dependency>
     <groupId>net.intelie.introspective</groupId>
     <artifactId>introspective</artifactId>
-    <version>0.5</version>
+    <version>0.6</version>
 </dependency>
 ```
 
