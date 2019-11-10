@@ -9,12 +9,16 @@ This library has two main features:
 - Inspect the total amount of allocated bytes for any thread, with an implementation orders of magnitude faster than ThreadMXBean;
 - Estimate recursively the total amount of bytes an object holds.
 
-Also, with the tools provided here, you can inspect pretty much any internal JVM object with this tool.
+Also, with the tools provided here, you can inspect pretty much any internal JVM object.
 
 We tested it on Linux, in OpenJDK versions 8 to 13, but it should work well in other systems.
 No guarantee, though.
 
-We had to use introspection because ThreadMXBean is just too slow for our needs.
+**Notes**
+
+* We had to use introspection because ThreadMXBean is just too slow for our needs.
+* The API may seem weird sometimes, but it is mostly because we try to avoid allocations at all costs
+  and this means we have to reuse objects whenever possible. 
 
 ## Usage
 

@@ -61,7 +61,7 @@ public class BloomObjectSizer {
             queue.add(obj);
 
 
-        //using a BFS first to give objects higher in the tree a higher change
+        //using a BFS first to give objects higher in the tree a higher chance
         //of not being pruned
         while (!queue.isEmpty()) {
             count++;
