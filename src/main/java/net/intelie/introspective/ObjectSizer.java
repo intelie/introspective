@@ -2,6 +2,7 @@ package net.intelie.introspective;
 
 import net.intelie.introspective.reflect.*;
 import net.intelie.introspective.util.ExpiringVisitedSet;
+import net.intelie.introspective.util.IdentityVisitedSet;
 import net.intelie.introspective.util.VisitedSet;
 
 public class ObjectSizer {
@@ -19,7 +20,7 @@ public class ObjectSizer {
     private Class<?> type;
 
     public ObjectSizer() {
-        this(new ReflectionCache(), new ExpiringVisitedSet(1 << 15), 1 << 15);
+        this(new ReflectionCache(), new IdentityVisitedSet(), 1 << 15);
     }
 
     public ObjectSizer(ReflectionCache cache, VisitedSet seen, int maxDepth) {
