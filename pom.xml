@@ -6,7 +6,7 @@
 
     <groupId>net.intelie.introspective</groupId>
     <artifactId>introspective</artifactId>
-    <version>0.8-SNAPSHOT</version>
+    <version>0.8</version>
 
     <name>Introspective</name>
     <description>JVM Introspection Utilities</description>

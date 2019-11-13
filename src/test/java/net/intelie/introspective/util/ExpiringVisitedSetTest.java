@@ -88,7 +88,7 @@ public class ExpiringVisitedSetTest {
 
         assertThat(set.contains(obj)).isLessThan(0);
         int index = set.enter(obj);
-        assertThat(index).isGreaterThan(0);
+        assertThat(index).isGreaterThanOrEqualTo(0);
 
         assertThat(set.contains(obj)).isGreaterThanOrEqualTo(0);
         assertThat(set.enter(obj)).isEqualTo(~index);
