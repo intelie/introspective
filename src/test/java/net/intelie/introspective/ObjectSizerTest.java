@@ -33,6 +33,20 @@ public class ObjectSizerTest {
     }
 
     @Test
+    public void wontBreakOnDeepLinkedList() {
+        Map test = new LinkedHashMap();
+        for (int i = 0; i < 100; i++) {
+            test.put(i, i);
+        }
+
+        ObjectSizer sizer = new ObjectSizer(new ReflectionCache(), new IdentityVisitedSet(), 10);
+        sizer.resetTo(test);
+        while (sizer.moveNext()) {
+        }
+        assertThat(sizer.skipped()).isGreaterThan(0);
+    }
+
+    @Test
     public void estimateNull() {
         assertThat(estimate(null)).isEqualTo(0);
     }
@@ -132,6 +146,7 @@ public class ObjectSizerTest {
         assertOnlyPath(sizer, Class.forName("[Ljava.util.HashMap$Node;"), 2, ".this$0.table");
         assertIteratorSame(sizer, this, 1, ".this$0$");
         assertThat(sizer.skipChildren()).isTrue();
+        assertThat(sizer.skipped()).isGreaterThan(0);
 
         assertThat(sizer.moveNext()).isFalse();
     }

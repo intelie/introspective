@@ -22,6 +22,20 @@ public class BloomObjectSizerTest {
     }
 
     @Test
+    public void wontBreakOnDeepLinkedList() {
+        Map test = new LinkedHashMap();
+        for (int i = 0; i < 100; i++) {
+            test.put(i, i);
+        }
+
+        BloomObjectSizer sizer = new BloomObjectSizer(new ReflectionCache(), 1024, 1, 10);
+        sizer.visit(test);
+        System.out.println(sizer.skipped());
+        assertThat(sizer.skipped()).isGreaterThan(0);
+    }
+
+
+    @Test
     public void estimateSizerSize() {
 
         ReflectionCache cache = new ReflectionCache(f -> !f.getType().equals(ReflectionCache.class));

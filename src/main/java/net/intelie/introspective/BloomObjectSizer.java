@@ -39,6 +39,10 @@ public class BloomObjectSizer {
         bytes = 0;
     }
 
+    public long skipped() {
+        return dfs.skipped();
+    }
+
     public long count() {
         return count;
     }

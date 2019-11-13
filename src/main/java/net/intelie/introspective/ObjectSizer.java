@@ -17,6 +17,7 @@ public class ObjectSizer {
     private ReferencePeeler currentPeeler;
     private boolean hasNextPeeler = false;
     private long bytes;
+    private long skipped;
     private Class<?> type;
 
     public ObjectSizer() {
@@ -39,6 +40,7 @@ public class ObjectSizer {
         current = null;
         type = null;
         bytes = 0;
+        skipped = 0;
         seen.clear();
 
         for (ReferencePeeler peelr : stack)
@@ -50,6 +52,7 @@ public class ObjectSizer {
     }
 
     public void resetTo(Object obj) {
+        skipped = 0;
         seen.softClear();
         set(obj);
     }
@@ -61,12 +64,17 @@ public class ObjectSizer {
         stack[0].resetTo(null, obj);
     }
 
+    public long skipped() {
+        return skipped;
+    }
+
     public boolean skipChildren() {
         if (!hasNextPeeler)
             return false;
 
         seen.exit(currentPeeler.current(), stackExit[index]);
         hasNextPeeler = false;
+        skipped++;
         return true;
     }
 
@@ -103,6 +111,8 @@ public class ObjectSizer {
                     hasNextPeeler = true;
                 } else {
                     seen.exit(currentObj, enterIndex);
+                    hasNextPeeler = false;
+                    skipped++;
                 }
                 return true;
             } else {
