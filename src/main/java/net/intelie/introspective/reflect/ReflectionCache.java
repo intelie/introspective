@@ -32,9 +32,11 @@ public class ReflectionCache {
     public class Item {
         private final long size;
         private final FastFieldAccessor[] fields;
+        private final Field[] rawField;
 
         public Item(Class<?> clazz) {
             List<FastFieldAccessor> peelable = new ArrayList<>();
+            List<Field> peelableRaw = new ArrayList<>();
 
             long size = JVMPrimitives.getObjectHeaderSize();
             int order = 0;
@@ -47,12 +49,18 @@ public class ReflectionCache {
                     if (field.getType().isPrimitive() || !shouldFollow.test(field))
                         continue;
                     peelable.add(new FastFieldAccessor(++order, field));
+                    peelableRaw.add(field);
                 }
                 clazz = clazz.getSuperclass();
             }
 
             this.size = size;
             this.fields = peelable.toArray(new FastFieldAccessor[0]);
+            this.rawField = peelableRaw.toArray(new Field[0]);
+        }
+
+        public Field field(int index) {
+            return rawField[index];
         }
 
         public long size() {

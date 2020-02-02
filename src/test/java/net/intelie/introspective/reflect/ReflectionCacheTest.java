@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class ReflectionCacheTest {
     @Test
-    public void testCaching() {
+    public void testCaching() throws NoSuchFieldException {
         ReflectionCache cache = new ReflectionCache();
         cache.clear();
         ReflectionCache.Item item = cache.get(TestClass.class);
@@ -24,6 +24,7 @@ public class ReflectionCacheTest {
         assertThat(item.size()).isEqualTo(alternativeSizing2(TestClass.class));
         assertThat(item.fieldCount()).isEqualTo(10);
         assertThat(item.fieldName(0)).isEqualTo("boxedByte");
+        assertThat(item.field(0)).isEqualTo(TestClass.class.getDeclaredField("boxedByte"));
 
     }
 
