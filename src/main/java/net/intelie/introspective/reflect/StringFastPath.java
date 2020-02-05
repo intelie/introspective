@@ -38,11 +38,15 @@ public class StringFastPath {
     }
 
     public long size(String s) {
-        if (coderOffset >= 0) {
+        if (isCompactStringsEnabled()) {
             byte coder = U.getByte(s, coderOffset);
             return JVMPrimitives.align(stringSize) + JVMPrimitives.align((s.length() << coder) + arrayOffset);
         } else {
             return JVMPrimitives.align(stringSize) + JVMPrimitives.align(arrayOffset + s.length() * 2);
         }
+    }
+
+    public boolean isCompactStringsEnabled() {
+        return coderOffset >= 0;
     }
 }

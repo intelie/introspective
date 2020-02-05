@@ -30,7 +30,6 @@ public class BloomObjectSizerTest {
 
         BloomObjectSizer sizer = new BloomObjectSizer(new ReflectionCache(), 1024, 1, 10);
         sizer.visit(test);
-        System.out.println(sizer.skipped());
         assertThat(sizer.skipped()).isGreaterThan(0);
     }
 

@@ -40,6 +40,10 @@ public class JVMPrimitives {
         stringFastPath = new StringFastPath();
     }
 
+    public static boolean isCompactStringsEnabled() {
+        return stringFastPath.isCompactStringsEnabled();
+    }
+
     public static long getFieldOffset(Field field) {
         return U.objectFieldOffset(field);
     }
