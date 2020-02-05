@@ -15,10 +15,8 @@ import java.util.stream.IntStream;
 public class Playground {
     @Test
     public void name() {
-        System.out.println(System.getProperty("java.home"));
         JVM jvm = new JVM();
         jvm.dump(System.out);
-
     }
 
     @Test
