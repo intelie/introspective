@@ -22,8 +22,10 @@ public class ThreadResourcesTest {
     @Test
     public void testEverythingValid() {
         System.out.println("RUNNING FROM: " + System.getProperty("java.version"));
-        assertThat(ThreadResources.isValidTlab()).isTrue();
-        assertThat(ThreadResources.isValidAllocated()).isTrue();
+        if (!System.getProperty("os.name").toLowerCase().contains("mac os")) {
+            assertThat(ThreadResources.isValidTlab()).isTrue();
+            assertThat(ThreadResources.isValidAllocated()).isTrue();
+        }
     }
 
     @Test
@@ -45,13 +47,19 @@ public class ThreadResourcesTest {
         byte[] bytes = new byte[100000];
 
         long total = ThreadResources.allocatedBytes() - start;
-
-        assertThat(total).isBetween(100000L, 100000L + 100);
+        if (!System.getProperty("os.name").toLowerCase().contains("mac os"))
+            assertThat(total).isBetween(100000L, 100000L + 100);
+        else
+            assertThat(total).isZero();
     }
 
     private long diff() {
         long check = bean.getThreadAllocatedBytes(Thread.currentThread().getId());
         long mine = ThreadResources.allocatedBytes(Thread.currentThread());
+        if (System.getProperty("os.name").toLowerCase().contains("mac os")) {
+            assertThat(mine).isZero();
+            return 0;
+        }
         assertThat(mine).isGreaterThanOrEqualTo(check);
         return mine - check;
     }

@@ -22,7 +22,9 @@ public class Symbols {
             classLoader = null;
         }
 
-        try {
+
+        System.out.println(os);
+       try {
             findNative = ClassLoader.class.getDeclaredMethod("findNative", ClassLoader.class, String.class);
             findNative.setAccessible(true);
         } catch (NoSuchMethodException e) {

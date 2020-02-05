@@ -29,11 +29,11 @@ public abstract class ThreadResources {
     }
 
     private static Field initField(Type type, String name) {
-        return type.field(name);
+        return type != null ? type.field(name) : null;
     }
 
     private static Type initType(String name) {
-        return vm.type(name);
+        return vm != null ? vm.type(name) : null;
     }
 
     private static JVM initJVM() {
