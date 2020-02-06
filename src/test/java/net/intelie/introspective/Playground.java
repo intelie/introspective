@@ -1,5 +1,6 @@
 package net.intelie.introspective;
 
+import net.intelie.introspective.hotspot.JVM;
 import net.intelie.introspective.reflect.ObjectPeeler;
 import net.intelie.introspective.reflect.ReflectionCache;
 import net.intelie.introspective.util.BloomVisitedSet;
@@ -12,6 +13,12 @@ import java.util.stream.IntStream;
 
 @Ignore
 public class Playground {
+    @Test
+    public void name() {
+        JVM jvm = new JVM();
+        jvm.dump(System.out);
+    }
+
     @Test
     public void testSmallObject() {
         ExpiringVisitedSet set = new ExpiringVisitedSet(1 << 15);

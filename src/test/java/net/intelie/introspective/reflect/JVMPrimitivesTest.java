@@ -6,6 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class JVMPrimitivesTest {
     @Test
+    public void testCompactStrings() {
+        assertThat(JVMPrimitives.isCompactStringsEnabled()).isEqualTo(
+                !System.getProperty("java.version").contains("1.8"));
+    }
+
+    @Test
     public void testPrimitives() {
         assertThat(JVMPrimitives.getPrimitive(byte.class)).isEqualTo(1);
         assertThat(JVMPrimitives.getPrimitive(short.class)).isEqualTo(2);
