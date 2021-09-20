@@ -12,6 +12,7 @@ import org.openjdk.jol.vm.LightVM;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -91,6 +92,15 @@ public class ObjectSizerTest {
         test.put(333.0, Collections.singletonMap("bbb", 444));
 
         assertThat(estimate(test)).isEqualTo(TestSizeUtils.size(test));
+    }
+
+    @Test
+    public void estimateLambda() {
+        Integer obj = 1;
+        Function<?, ?> test = (Function<Integer, Integer>) x -> x + obj;
+
+        assertThat(estimate(obj)).isEqualTo(TestSizeUtils.size(obj));
+        assertThat(estimate(test)).isEqualTo(TestSizeUtils.size(test)).isGreaterThan(TestSizeUtils.size(obj));
     }
 
     @Test
@@ -246,7 +256,6 @@ public class ObjectSizerTest {
         private double primDouble;
         private boolean primBool;
         private char primChar;
-
 
         private Byte boxedByte = 1;
         private Short boxedShort = 2;
