@@ -13,8 +13,25 @@ public class UnsafeGetterTest {
     }
 
     @Test
+    public void testCouldGetInternalObjectFieldOffsetMethodHandle() {
+        assertThat(UnsafeGetter.getObjectFieldOffset()).isNotNull();
+    }
+
+    @Test
     public void testExceptionHandling() {
         assertThatThrownBy(() -> UnsafeGetter.tryGetAccessible(Unsafe.class, "unknown"))
                 .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void testExceptionHandlingInternalUnsafe() {
+        assertThatThrownBy(() -> UnsafeGetter.tryGetRealMethodHandle(Unsafe.class, "unknown", "unknown", "objectFieldOffset"))
+                .isInstanceOf(RuntimeException.class).hasCauseInstanceOf(NoSuchFieldException.class);
+    }
+
+    @Test
+    public void testExceptionHandlingInternalMethod() {
+        assertThatThrownBy(() -> UnsafeGetter.tryGetRealMethodHandle(Unsafe.class, "theInternalUnsafe", "theUnsafe", "unknown"))
+                .isInstanceOf(RuntimeException.class).hasCauseInstanceOf(NoSuchMethodException.class);
     }
 }

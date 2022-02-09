@@ -29,7 +29,7 @@ public class FastFieldAccessor {
         this.declarationOrder = declarationOrder;
 
         if (allowUnsafe && U != null) {
-            offset = U.objectFieldOffset(field);
+            offset = UnsafeGetter.objectFieldOffset(field);
             this.accessors.addLast(() -> unsafeAccessor(field, offset));
         } else {
             offset = 0;

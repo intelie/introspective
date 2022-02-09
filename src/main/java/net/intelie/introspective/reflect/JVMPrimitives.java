@@ -45,7 +45,7 @@ public class JVMPrimitives {
     }
 
     public static long getFieldOffset(Field field) {
-        return U.objectFieldOffset(field);
+        return UnsafeGetter.objectFieldOffset(field);
     }
 
     public static long getPrimitive(Class<?> clazz) {

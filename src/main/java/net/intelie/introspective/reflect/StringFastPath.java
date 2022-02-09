@@ -50,9 +50,9 @@ public class StringFastPath {
     public long size(String s) {
         if (isCompactStringsEnabled()) {
             byte coder = U.getByte(s, coderOffset);
-            return JVMPrimitives.align(stringSize) + JVMPrimitives.align((s.length() << coder) + arrayOffset);
+            return JVMPrimitives.align(stringSize) + JVMPrimitives.align(((long) s.length() << coder) + arrayOffset);
         } else {
-            return JVMPrimitives.align(stringSize) + JVMPrimitives.align(arrayOffset + s.length() * 2);
+            return JVMPrimitives.align(stringSize) + JVMPrimitives.align(arrayOffset + s.length() * 2L);
         }
     }
 
