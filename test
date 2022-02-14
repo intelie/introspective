@@ -17,6 +17,11 @@ testwith maven:3-jdk-10
 testwith maven:3-jdk-11
 testwith maven:3-jdk-12
 testwith maven:3-jdk-13
+testwith maven:3-jdk-14
+testwith maven:3-openjdk-15
+testwith maven:3-openjdk-16
+testwith maven:3-openjdk-17
 testwith maven:3-amazoncorretto-8
 testwith maven:3-amazoncorretto-11
+testwith maven:3-amazoncorretto-17
 
