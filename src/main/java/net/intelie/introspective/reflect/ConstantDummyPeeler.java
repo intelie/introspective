@@ -12,7 +12,7 @@ public class ConstantDummyPeeler implements ReferencePeeler {
 
     @Override
     public long resetTo(Class<?> clazz, Object value) {
-        this.eof = value != null ? false : true;
+        this.eof = value == null;
         this.obj = value;
         return 0;
     }

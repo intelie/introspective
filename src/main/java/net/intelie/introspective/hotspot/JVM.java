@@ -5,12 +5,7 @@ import net.intelie.introspective.util.UnsafeGetter;
 import sun.misc.Unsafe;
 
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 public class JVM {
     public static final Unsafe unsafe = UnsafeGetter.get();
@@ -45,8 +40,7 @@ public class JVM {
             boolean isStatic = getInt(entry + isStaticOffset) != 0;
             long offset = getLong(entry + (isStatic ? addressOffset : offsetOffset));
 
-            Set<Field> fields = structs.get(typeName);
-            if (fields == null) structs.put(typeName, fields = new TreeSet<>());
+            Set<Field> fields = structs.computeIfAbsent(typeName, k -> new TreeSet<>());
             fields.add(new Field(fieldName, typeString, offset, isStatic));
         }
 

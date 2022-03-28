@@ -1,11 +1,12 @@
 package net.intelie.introspective.reflect;
 
 import net.intelie.introspective.ThreadResources;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openjdk.jol.vm.LightVM;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

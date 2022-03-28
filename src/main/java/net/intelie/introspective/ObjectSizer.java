@@ -1,7 +1,6 @@
 package net.intelie.introspective;
 
 import net.intelie.introspective.reflect.*;
-import net.intelie.introspective.util.ExpiringVisitedSet;
 import net.intelie.introspective.util.IdentityVisitedSet;
 import net.intelie.introspective.util.VisitedSet;
 

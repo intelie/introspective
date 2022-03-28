@@ -1,10 +1,8 @@
 package net.intelie.introspective;
 
-import net.intelie.introspective.reflect.GenericPeeler;
 import net.intelie.introspective.reflect.ReflectionCache;
 import net.intelie.introspective.reflect.StringFastPath;
 import net.intelie.introspective.reflect.TestSizeUtils;
-import net.intelie.introspective.util.BloomVisitedSet;
 import net.intelie.introspective.util.ExpiringVisitedSet;
 import net.intelie.introspective.util.IdentityVisitedSet;
 import org.junit.Test;

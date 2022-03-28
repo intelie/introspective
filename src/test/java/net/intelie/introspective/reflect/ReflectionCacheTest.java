@@ -4,7 +4,6 @@ import net.intelie.introspective.util.UnsafeGetter;
 import org.junit.Test;
 import org.openjdk.jol.info.ClassData;
 import org.openjdk.jol.info.ClassLayout;
-import org.openjdk.jol.info.FieldLayout;
 import org.openjdk.jol.layouters.CurrentLayouter;
 import org.openjdk.jol.vm.LightVM;
 import sun.misc.Unsafe;

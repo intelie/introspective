@@ -63,7 +63,7 @@ public class FastFieldAccessor {
 
     private static Accessor reflectionAccessor(Field field) {
         field.setAccessible(true);
-        return x -> field.get(x);
+        return field::get;
     }
 
     public long offset() {
