@@ -8,6 +8,8 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UnsafeGetter {
     private static final Unsafe unsafe = tryGetAccessible(Unsafe.class, "theUnsafe");
@@ -31,12 +33,24 @@ public class UnsafeGetter {
                                                       String methodName) {
         return AccessController.doPrivileged((PrivilegedAction<MethodHandle>) () -> {
             try {
-                Field field;
-                try {
-                    field = clazz.getDeclaredField(internalFieldName);
-                } catch (NoSuchFieldException e) {
-                    field = clazz.getDeclaredField(fieldName);
-                }
+                Field field = clazz.getDeclaredField(internalFieldName);
+                field.setAccessible(true);
+                Object object = field.get(null);
+
+                return MethodHandles.lookup().findVirtual(object.getClass(), methodName,
+                        MethodType.methodType(long.class, Field.class)).bindTo(object);
+            } catch (NoSuchFieldException ignored) {
+                // Internal Unsafe does not exist, fall back to legacy field.
+            } catch (IllegalAccessException e) {
+                Logger.getLogger(UnsafeGetter.class.getName())
+                        .log(Level.WARNING, "Internal field access rejected, estimating lambda size can fail", e);
+                // Fall back to legacy field.
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException(e);
+            }
+
+            try {
+                Field field = clazz.getDeclaredField(fieldName);
                 field.setAccessible(true);
                 Object object = field.get(null);
 
