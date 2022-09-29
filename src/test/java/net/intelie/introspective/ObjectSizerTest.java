@@ -19,14 +19,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ObjectSizerTest {
     @Test
     public void estimateSingleton() {
-        Map test = Collections.singletonMap("abc", 123);
+        Map<Object, Object> test = Collections.singletonMap("abc", 123);
 
         assertThat(estimate(test)).isEqualTo(TestSizeUtils.size(test));
     }
 
     @Test
     public void estimateMap() {
-        Map test = new HashMap<>();
+        Map<Object, Object> test = new HashMap<>();
         test.put(111, Arrays.asList("aaa", 222));
         test.put(333.0, Collections.singletonMap("bbb", 444));
 
@@ -35,7 +35,7 @@ public class ObjectSizerTest {
 
     @Test
     public void wontBreakOnDeepLinkedList() {
-        Map test = new LinkedHashMap();
+        Map<Object, Object> test = new LinkedHashMap<>();
         for (int i = 0; i < 100; i++) {
             test.put(i, i);
         }
@@ -87,7 +87,7 @@ public class ObjectSizerTest {
 
     @Test
     public void estimateLinkedHashMap() {
-        Map test = new LinkedHashMap();
+        Map<Object, Object> test = new LinkedHashMap<>();
         test.put(111, Arrays.asList("aaa", 222));
         test.put(333.0, Collections.singletonMap("bbb", 444));
 
@@ -122,7 +122,7 @@ public class ObjectSizerTest {
     }
 
     private void fullTestWith(ObjectSizer sizer) throws ClassNotFoundException {
-        Map test = new LinkedHashMap();
+        Map<Object, Object> test = new LinkedHashMap<>();
         Object value1 = Arrays.asList("aaa", 222);
         Object value2 = Collections.singletonMap("bbb", 444);
         test.put(111, value1);
@@ -162,8 +162,8 @@ public class ObjectSizerTest {
     }
 
     @Test
-    public void fullTestWithSkip() throws ClassNotFoundException {
-        Map test = new LinkedHashMap();
+    public void fullTestWithSkip() {
+        Map<Object, Object> test = new LinkedHashMap<>();
         Object value1 = Arrays.asList("aaa", 222);
         Object value2 = Collections.singletonMap("bbb", 444);
         test.put(111, value1);
@@ -192,8 +192,6 @@ public class ObjectSizerTest {
         assertThat(sizer.skipChildren()).isTrue();
 
         assertThat(sizer.moveNext()).isFalse();
-
-
     }
 
     private void assertIteratorEq(ObjectSizer sizer, Object obj, int depth, String path) {
@@ -266,9 +264,9 @@ public class ObjectSizerTest {
         private Boolean boxedBool = true;
         private Character boxedChar = 'x';
 
-        private Map this$0;
+        private Map<?, ?> this$0;
 
-        public TestClass(Map string) {
+        public TestClass(Map<?, ?> string) {
             this.this$0 = string;
         }
     }

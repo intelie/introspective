@@ -12,7 +12,7 @@ public class ThreadResourcesTest {
     private ThreadMXBean bean;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         bean = (ThreadMXBean) ManagementFactory.getThreadMXBean();
         //warmup
         diff();

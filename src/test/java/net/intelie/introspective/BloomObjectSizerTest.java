@@ -14,14 +14,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class BloomObjectSizerTest {
     @Test
     public void estimateSingleton() {
-        Map test = Collections.singletonMap("abc", 123);
+        Map<Object, Object> test = Collections.singletonMap("abc", 123);
 
         assertThat(estimate(test)).isEqualTo(TestSizeUtils.size(test));
     }
 
     @Test
     public void wontBreakOnDeepLinkedList() {
-        Map test = new LinkedHashMap();
+        Map<Object, Object> test = new LinkedHashMap<>();
         for (int i = 0; i < 100; i++) {
             test.put(i, i);
         }
@@ -49,7 +49,7 @@ public class BloomObjectSizerTest {
 
     @Test
     public void estimateMap() {
-        Map test = new HashMap<>();
+        Map<Object, Object> test = new HashMap<>();
         test.put(111, Arrays.asList("aaa", 222));
         test.put(333.0, Collections.singletonMap("bbb", 444));
 
@@ -95,7 +95,7 @@ public class BloomObjectSizerTest {
 
     @Test
     public void estimateLinkedHashMap() {
-        Map test = new LinkedHashMap();
+        Map<Object, Object> test = new LinkedHashMap<>();
         test.put(111, Arrays.asList("aaa", 222));
         test.put(333.0, Collections.singletonMap("bbb", 444));
 

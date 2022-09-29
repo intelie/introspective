@@ -40,7 +40,7 @@ public class ObjectPeelerTest {
 
     @Test
     public void testNewHashMap() {
-        HashMap map = new HashMap();
+        HashMap<Object, Object> map = new HashMap<>();
 
         ObjectPeeler peeler = new ObjectPeeler(cache);
         long bytes = peeler.resetTo(HashMap.class, map);
@@ -70,7 +70,7 @@ public class ObjectPeelerTest {
 
     @Test
     public void testNewArrayList() {
-        List list = new ArrayList<>();
+        List<Object> list = new ArrayList<>();
 
         ObjectPeeler peeler = new ObjectPeeler(cache);
         long bytes = peeler.resetTo(ArrayList.class, list);

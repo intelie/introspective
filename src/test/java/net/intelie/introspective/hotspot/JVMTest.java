@@ -14,7 +14,7 @@ public class JVMTest {
     public static JVM jvm;
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUp() {
         jvm = new JVM();
     }
 
