@@ -5,6 +5,7 @@ import net.intelie.introspective.reflect.ObjectPeeler;
 import net.intelie.introspective.reflect.ReflectionCache;
 import net.intelie.introspective.util.BloomVisitedSet;
 import net.intelie.introspective.util.ExpiringVisitedSet;
+import net.intelie.introspective.util.SuppressForbidden;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -12,6 +13,7 @@ import java.util.*;
 import java.util.stream.IntStream;
 
 @Ignore
+@SuppressForbidden
 public class Playground {
     @Test
     public void name() {

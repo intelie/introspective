@@ -2,13 +2,14 @@ package net.intelie.introspective.hotspot;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Locale;
 
 public class Symbols {
     private static final Method findNative;
     private static final ClassLoader classLoader;
 
     static {
-        String os = System.getProperty("os.name").toLowerCase();
+        String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
         if (os.contains("windows")) {
             String vmName = System.getProperty("java.vm.name");
             String dll = vmName.contains("Client VM") ? "/bin/client/jvm.dll" : "/bin/server/jvm.dll";

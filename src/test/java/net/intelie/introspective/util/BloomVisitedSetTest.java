@@ -36,6 +36,7 @@ public class BloomVisitedSetTest {
 
     @Test
     @Ignore
+    @SuppressForbidden
     public void testError() {
         int total = 500000;
         double[][] error = new double[256][10];

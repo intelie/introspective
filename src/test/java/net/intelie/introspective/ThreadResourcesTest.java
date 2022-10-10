@@ -1,10 +1,12 @@
 package net.intelie.introspective;
 
 import com.sun.management.ThreadMXBean;
+import net.intelie.introspective.util.SuppressForbidden;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,9 +21,10 @@ public class ThreadResourcesTest {
     }
 
     @Test
+    @SuppressForbidden
     public void testEverythingValid() {
         System.out.println("RUNNING FROM: " + System.getProperty("java.version"));
-        if (!System.getProperty("os.name").toLowerCase().contains("mac os")) {
+        if (!System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("mac os")) {
             assertThat(ThreadResources.isValidTlab()).isTrue();
             assertThat(ThreadResources.isValidAllocated()).isTrue();
         }
@@ -46,7 +49,7 @@ public class ThreadResourcesTest {
         byte[] bytes = new byte[100000];
 
         long total = ThreadResources.allocatedBytes() - start;
-        if (!System.getProperty("os.name").toLowerCase().contains("mac os"))
+        if (!System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("mac os"))
             assertThat(total).isBetween(100000L, 100000L + 100);
         else
             assertThat(total).isZero();
@@ -55,7 +58,7 @@ public class ThreadResourcesTest {
     private long diff() {
         long check = bean.getThreadAllocatedBytes(Thread.currentThread().getId());
         long mine = ThreadResources.allocatedBytes(Thread.currentThread());
-        if (System.getProperty("os.name").toLowerCase().contains("mac os")) {
+        if (System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("mac os")) {
             assertThat(mine).isZero();
             return 0;
         }

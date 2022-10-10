@@ -22,7 +22,7 @@ public class JVMTest {
     public void testListStuff() throws UnsupportedEncodingException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        jvm.dump(new PrintStream(baos));
+        jvm.dump(new PrintStream(baos, false, "UTF-8"));
 
         String str = baos.toString("UTF-8");
 
